@@ -20,6 +20,7 @@
   initThemeToggle();
   initReveal();
   initStats();
+  initIgStats();
   initParallax();
   initLightbox();
   initDeadlinePicker();
