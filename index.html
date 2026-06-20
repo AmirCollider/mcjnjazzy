@@ -3,12 +3,32 @@
      index.html — Page Shell & Structure
      mcjn_jazzy — Commission Hub
      ========================================== -->
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>mcjn_jazzy 🍓 commissions</title>
   <meta name="description" content="Who Jazzy is, the art she makes, and how to commission her — all in one cozy little hub." />
+
+  <!-- favicon (crisp strawberry) + share image -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Ctext%20y='.9em'%20font-size='88'%3E🍓%3C/text%3E%3C/svg%3E" />
+  <link rel="apple-touch-icon" href="/mcjnjazzyprofile.jpg" />
+  <meta property="og:title" content="mcjn_jazzy 🍓 commissions" />
+  <meta property="og:description" content="Meet Jazzy and commission your art." />
+  <meta property="og:image" content="/mcjnjazzyprofile.jpg" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary" />
+
+  <!-- set theme before paint to avoid a flash -->
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
 
   <!-- Fonts: rounded display + soft body + handwritten accent -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -25,15 +45,33 @@
     <span class="doodle d3">✦</span>
     <span class="doodle d4">🍰</span>
     <span class="doodle d5">★</span>
+    <span class="doodle d6">🍓</span>
   </div>
 
   <main class="page">
 
     <!-- ==========================================
+         TOP BAR — theme toggle
+         ========================================== -->
+    <div class="topbar reveal">
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch light / dark">
+        <span class="tt-track">
+          <span class="tt-icon tt-sun">☀️</span>
+          <span class="tt-icon tt-moon">🌙</span>
+          <span class="tt-knob"></span>
+        </span>
+      </button>
+    </div>
+
+    <!-- ==========================================
          SECTION 1 — ID CARD (who is Jazzy?)
          ========================================== -->
-    <section class="card idcard" aria-label="Artist ID card">
-      <div class="ribbon" aria-hidden="true"></div>
+    <section class="card idcard reveal delay-1" aria-label="Artist ID card">
+      <!-- cover banner (1376 × 768) -->
+      <div class="cover">
+        <img src="/ARTBanner.png" alt="Jazzy's cover banner"
+             onerror="this.closest('.idcard').classList.add('no-cover');" />
+      </div>
 
       <!-- bobbing strawberry status sticker (signature element) -->
       <div class="status-sticker" title="Current status">
@@ -42,10 +80,9 @@
       </div>
 
       <div class="idcard-top">
-        <div class="avatar" role="img" aria-label="Jazzy's avatar">
-          <!-- Replace with real avatar: put avatar.png in the repo root and swap the line below -->
-          <span class="avatar-fallback">🍓</span>
-          <!-- <img src="/avatar.png" alt="Jazzy's avatar" /> -->
+        <div class="avatar">
+          <img src="/mcjnjazzyprofile.jpg" alt="Jazzy's profile picture"
+               onerror="this.style.display='none';this.parentElement.classList.add('no-img');" />
         </div>
 
         <div class="idcard-id">
@@ -56,40 +93,57 @@
       </div>
 
       <ul class="chips" aria-label="About">
-        <li class="chip">🎂 <strong id="bioAge">FILL: age</strong></li>
+        <!-- replace 00 with Jazzy's age -->
+        <li class="chip">🎂 <strong id="bioAge">00</strong></li>
         <li class="chip">🧩 ENFP</li>
         <li class="chip">🖊️ drawn on iPad</li>
       </ul>
     </section>
 
     <!-- ==========================================
-         SECTION 2 — BRIDGES (portfolio + socials)
+         SECTION 2 — RECENT ART (showcase)
          ========================================== -->
-    <section class="card links" aria-label="Where to find Jazzy">
+    <section class="card gallery reveal delay-2" aria-label="Recent art">
+      <h2 class="section-title">recent art <span>🎨</span></h2>
+      <div class="art-row">
+        <figure class="art"><img src="/ART01.png" alt="Recent artwork 1" loading="lazy"
+          onerror="this.closest('.art').style.display='none';" /></figure>
+        <figure class="art"><img src="/ART02.png" alt="Recent artwork 2" loading="lazy"
+          onerror="this.closest('.art').style.display='none';" /></figure>
+        <figure class="art"><img src="/ART03.png" alt="Recent artwork 3" loading="lazy"
+          onerror="this.closest('.art').style.display='none';" /></figure>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         SECTION 3 — BRIDGES (portfolio + socials)
+         ========================================== -->
+    <section class="card links reveal delay-3" aria-label="Where to find Jazzy">
       <h2 class="section-title">my little corners <span>✦</span></h2>
 
       <p class="group-label">portfolio</p>
-      <div class="link-grid">
-        <a class="link-pill folio" href="FILL_PINTEREST_URL" target="_blank" rel="noopener">📌 Pinterest</a>
-        <a class="link-pill folio" href="FILL_YOUTUBE_URL" target="_blank" rel="noopener">▶️ YouTube</a>
+      <div class="link-row">
+        <a class="link-pill folio" href="https://mcjnjazzy.straw.page/" target="_blank" rel="noopener">🍓 straw.page</a>
+        <a class="link-pill folio" href="https://www.pinterest.com/mcjnjazzy/" target="_blank" rel="noopener">📌 Pinterest</a>
+        <a class="link-pill folio" href="https://www.youtube.com/@Mcjn_jazzy" target="_blank" rel="noopener">▶️ YouTube</a>
       </div>
 
       <p class="group-label">say hi</p>
-      <div class="link-grid">
-        <a class="link-pill" href="FILL_INSTAGRAM_URL" target="_blank" rel="noopener">📷 Instagram</a>
-        <a class="link-pill" href="FILL_THREADS_URL" target="_blank" rel="noopener">🧵 Threads</a>
-        <a class="link-pill" href="FILL_TWITTER_URL" target="_blank" rel="noopener">🐦 Twitter / X</a>
-        <a class="link-pill" href="FILL_TIKTOK_URL" target="_blank" rel="noopener">🎵 TikTok</a>
+      <div class="link-row">
+        <a class="link-pill" href="https://www.instagram.com/mcjn_jazzy" target="_blank" rel="noopener">📷 Instagram</a>
+        <a class="link-pill" href="https://www.threads.com/@mcjn_jazzy" target="_blank" rel="noopener">🧵 Threads</a>
+        <a class="link-pill" href="https://x.com/mcjnjazzy" target="_blank" rel="noopener">🐦 Twitter / X</a>
+        <a class="link-pill" href="https://www.tiktok.com/@mcjn_jazzy" target="_blank" rel="noopener">🎵 TikTok</a>
       </div>
     </section>
 
     <!-- stitched divider -->
-    <div class="stitch" aria-hidden="true"></div>
+    <div class="stitch reveal delay-3" aria-hidden="true"></div>
 
     <!-- ==========================================
-         SECTION 3 — COMMISSION DESK (order form)
+         SECTION 4 — COMMISSION DESK (order form)
          ========================================== -->
-    <section class="card desk" aria-label="Commission desk">
+    <section class="card desk reveal delay-4" aria-label="Commission desk">
       <h2 class="section-title">commission desk <span>🍰</span></h2>
       <p class="desk-note">fill the little form below and your request flies straight to me 🕊️</p>
 
@@ -143,7 +197,7 @@
       </form>
     </section>
 
-    <footer class="foot">
+    <footer class="foot reveal delay-5">
       made with 🍓 by jazzy · <span id="year"></span>
     </footer>
   </main>

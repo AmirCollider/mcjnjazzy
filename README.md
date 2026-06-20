@@ -56,6 +56,10 @@ jazzy-hub/
 ├── styles.css                  Theme tokens (light/dark), layout, animations
 ├── app.js                      Client validation, submit, theme toggle
 ├── mcjnjazzyprofile.jpg        Jazzy's avatar (repo root)
+├── ARTBanner.png               Cover banner, 1376×768 (repo root)
+├── ART01.png                   Recent-art showcase, transparent (repo root)
+├── ART02.png                   Recent-art showcase, transparent (repo root)
+├── ART03.png                   Recent-art showcase, transparent (repo root)
 ├── functions/
 │   └── api/
 │       ├── _shared.js          Shared helpers (NOT a route — underscore)

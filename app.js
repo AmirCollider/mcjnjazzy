@@ -1,5 +1,5 @@
 // ==========================================
-// app.js — Form Handling & Submission
+// app.js — Form Handling, Theme Toggle & UI
 // mcjn_jazzy — Commission Hub
 // ==========================================
 
@@ -16,7 +16,24 @@
 
   const form = document.getElementById("commissionForm");
   if (form) form.addEventListener("submit", handleSubmit);
+
+  initThemeToggle();
 })();
+
+// ==========================================
+// initThemeToggle() — flip + remember theme
+// ==========================================
+function initThemeToggle() {
+  const btn = document.getElementById("themeToggle");
+  if (!btn) return;
+
+  btn.addEventListener("click", function () {
+    const current = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+    const next = current === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    try { localStorage.setItem("theme", next); } catch (e) {}
+  });
+}
 
 // ==========================================
 // handleSubmit() — validate, send, report
@@ -24,10 +41,10 @@
 async function handleSubmit(event) {
   event.preventDefault();
 
-  const form    = event.currentTarget;
-  const btn     = document.getElementById("submitBtn");
-  const msg     = document.getElementById("formMsg");
-  const label   = btn.querySelector(".btn-label");
+  const form  = event.currentTarget;
+  const btn   = document.getElementById("submitBtn");
+  const msg   = document.getElementById("formMsg");
+  const label = btn.querySelector(".btn-label");
 
   setMessage(msg, "", "");
 
