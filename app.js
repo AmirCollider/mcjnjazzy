@@ -7,9 +7,6 @@
 // init() — page setup on load
 // ==========================================
 (function init() {
-  const yearEl = document.getElementById("year");
-  if (yearEl) yearEl.textContent = new Date().getFullYear();
-
   // block past dates on the deadline date picker
   const deadlineDate = document.getElementById("deadlineDate");
   if (deadlineDate) deadlineDate.min = new Date().toISOString().split("T")[0];
@@ -22,7 +19,9 @@
   initStats();
   initIgStats();
   initParallax();
+  initTilt();
   initLightbox();
+  initSparkleClicks();
   initDeadlinePicker();
 })();
 
@@ -38,6 +37,7 @@ function initThemeToggle() {
     const next = current === "dark" ? "light" : "dark";
     document.documentElement.setAttribute("data-theme", next);
     try { localStorage.setItem("theme", next); } catch (e) {}
+    burstConfetti(btn, next === "dark" ? ["🌙", "✨", "★", "🫧"] : ["☀️", "✨", "🍓", "★"]);
   });
 }
 
@@ -149,6 +149,59 @@ function initParallax() {
 }
 
 // ==========================================
+// initTilt() — subtle pointer-follow 3D tilt on the ID card
+// ==========================================
+function initTilt() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (matchMedia("(pointer: coarse)").matches) return;
+
+  const card = document.querySelector(".idcard");
+  if (!card) return;
+
+  const MAX = 5; // degrees
+  let raf = null, rx = 0, ry = 0;
+
+  card.style.transition = "transform .18s ease, opacity .55s ease";
+
+  card.addEventListener("mousemove", function (e) {
+    const r = card.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width - 0.5;
+    const py = (e.clientY - r.top) / r.height - 0.5;
+    ry = px * (MAX * 2);
+    rx = -py * (MAX * 2);
+    if (!raf) raf = requestAnimationFrame(apply);
+  });
+
+  card.addEventListener("mouseleave", function () {
+    rx = 0; ry = 0;
+    if (!raf) raf = requestAnimationFrame(apply);
+  });
+
+  function apply() {
+    card.style.transform =
+      "perspective(900px) rotateX(" + rx.toFixed(2) + "deg) rotateY(" + ry.toFixed(2) + "deg)";
+    raf = null;
+  }
+}
+
+// ==========================================
+// initSparkleClicks() — playful confetti on signature elements
+// ==========================================
+function initSparkleClicks() {
+  const sticker = document.querySelector(".status-sticker");
+  if (sticker) {
+    sticker.style.cursor = "pointer";
+    sticker.addEventListener("click", function () { burstConfetti(sticker, ["🍓", "✨", "💗", "★"]); });
+  }
+
+  const avatar = document.querySelector(".avatar");
+  if (avatar) {
+    avatar.style.cursor = "pointer";
+    avatar.addEventListener("click", function () { burstConfetti(avatar, ["✨", "🌸", "★", "🫧"]); });
+  }
+}
+
+// ==========================================
 // initLightbox() — click any artwork to zoom it
 // ==========================================
 function initLightbox() {
@@ -222,17 +275,17 @@ function resetDeadline() {
 // ==========================================
 // burstConfetti() — strawberry pop on success
 // ==========================================
-function burstConfetti(anchor) {
+function burstConfetti(anchor, pieces) {
   if (matchMedia("(prefers-reduced-motion: reduce)").matches || !anchor) return;
   const rect = anchor.getBoundingClientRect();
   const cx = rect.left + rect.width / 2;
   const cy = rect.top + rect.height / 2;
-  const pieces = ["🍓", "✨", "🍰", "★", "🫧"];
+  const set = pieces && pieces.length ? pieces : ["🍓", "✨", "🍰", "★", "🫧"];
 
   for (let i = 0; i < 18; i++) {
     const s = document.createElement("span");
     s.className = "confetti";
-    s.textContent = pieces[i % pieces.length];
+    s.textContent = set[i % set.length];
     const angle = Math.random() * Math.PI * 2;
     const dist = 80 + Math.random() * 90;
     s.style.left = cx + "px";
@@ -289,11 +342,13 @@ async function handleSubmit(event) {
     });
     const data = await res.json();
 
-    if (res.ok && data.ok) {
+   if (res.ok && data.ok) {
       form.reset();
       resetDeadline();
       setMessage(msg, "sent! your request landed safely 💌✨", "ok");
       burstConfetti(btn);
+    } else if (res.status === 403 || (data && data.blocked)) {
+      setMessage(msg, "this Telegram username can't send requests 🚫", "err");
     } else {
       setMessage(msg, "something went wrong — please try again in a bit 🫧", "err");
     }
