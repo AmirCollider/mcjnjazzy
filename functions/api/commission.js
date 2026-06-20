@@ -8,7 +8,7 @@
 // Secrets:  TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
 // Binding:  COMMISSIONS (KV)  — optional but recommended
 
-import { tg, json, esc, cardText, cardKeyboard, putCommission } from "./_shared.js";
+import { tg, json, esc, cardText, cardKeyboard, putCommission, isBlocked } from "./_shared.js";
 
 // ==========================================
 // onRequestPost() — entry point for POST
@@ -30,6 +30,11 @@ export async function onRequestPost(context) {
       if (!data[field] || String(data[field]).trim() === "") {
         return json({ ok: false, error: "Missing field: " + field }, 400);
       }
+    }
+
+    // blocked customers can't submit — tell them clearly
+    if (await isBlocked(env, data.customer)) {
+      return json({ ok: false, blocked: true, error: "blocked" }, 403);
     }
 
     if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) {
