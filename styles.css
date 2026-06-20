@@ -237,6 +237,7 @@ body {
 .chip {
   position: relative;
   isolation: isolate;
+  overflow: hidden;
   background: linear-gradient(135deg, var(--panel), var(--panel-2));
   color: var(--ink);
   padding: 9px 16px;
@@ -244,32 +245,24 @@ body {
   font-weight: 700;
   font-size: 0.92rem;
   border: 1.5px solid var(--border);
-  box-shadow: var(--shadow-lift);
+  box-shadow: var(--shadow-lift), 0 0 16px -6px var(--berry);
   cursor: default;
-  transition: transform .22s cubic-bezier(.34,1.56,.64,1), box-shadow .22s ease, filter .22s ease;
+  transition: transform .22s cubic-bezier(.34,1.56,.64,1), box-shadow .3s ease, filter .22s ease;
 }
 .chip strong { color: var(--berry-ink); }
-.chip::before {
-  content: ""; position: absolute; inset: -2px; z-index: -1;
-  border-radius: inherit;
-  background: radial-gradient(62% 80% at 50% 50%, var(--berry), transparent 70%);
-  opacity: 0;
-  transition: opacity .25s ease;
-}
 .chip::after {
-  content: ""; position: absolute; top: 0; left: -120%; z-index: 1;
+  content: ""; position: absolute; top: 0; left: -130%; z-index: 1;
   width: 55%; height: 100%;
-  background: linear-gradient(120deg, transparent, rgba(255,255,255,0.5), transparent);
+  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.55), transparent);
   transform: skewX(-18deg);
   pointer-events: none;
 }
 .chip:hover {
   transform: translateY(-4px) scale(1.05) rotate(-1.5deg);
-  box-shadow: 0 14px 24px -12px var(--berry-ink);
-  filter: brightness(1.03);
+  box-shadow: var(--shadow-lift), 0 0 22px -2px var(--berry-ink);
+  filter: brightness(1.04);
 }
-.chip:hover::before { opacity: 0.4; }
-.chip:hover::after { animation: chipShine .75s ease; }
+.chip:hover::after { animation: chipShine .8s ease; }
 @keyframes chipShine { to { left: 130%; } }
 
 /* status sticker — the signature, gently bobbing */
