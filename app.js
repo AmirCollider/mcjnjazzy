@@ -99,6 +99,30 @@ function initStats() {
 }
 
 // ==========================================
+// initIgStats() — pull live Instagram counts from /api/igstats
+// (falls back silently to the static numbers if unavailable)
+// ==========================================
+function initIgStats() {
+  const posts     = document.getElementById("statPosts");
+  const followers = document.getElementById("statFollowers");
+  const following = document.getElementById("statFollowing");
+  if (!posts && !followers && !following) return;
+
+  const fmt = (n) => (n >= 1000 ? (Math.round(n / 100) / 10) + "K" : Math.round(n).toString());
+
+  fetch("/api/igstats")
+    .then((r) => r.json())
+    .then((data) => {
+      if (!data || !data.ok || !data.stats) return;
+      const s = data.stats;
+      if (posts && typeof s.posts === "number") { posts.dataset.count = s.posts; posts.textContent = fmt(s.posts); }
+      if (followers && typeof s.followers === "number") { followers.dataset.count = s.followers; followers.textContent = fmt(s.followers); }
+      if (following && typeof s.following === "number") { following.dataset.count = s.following; following.textContent = fmt(s.following); }
+    })
+    .catch(function () { /* keep the static numbers */ });
+}
+
+// ==========================================
 // initParallax() — drift background doodles with the pointer
 // ==========================================
 function initParallax() {
