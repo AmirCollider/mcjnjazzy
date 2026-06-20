@@ -140,7 +140,14 @@ body {
   color: var(--berry-ink);
   display: flex; align-items: center; gap: 8px;
 }
-.section-title span { color: var(--star); }
+.section-title { cursor: default; }
+.section-title span { color: var(--star); display: inline-block; transition: transform .2s ease; }
+.section-title:hover span { animation: emojiWiggle .6s ease; }
+@keyframes emojiWiggle {
+  0%, 100% { transform: rotate(0) scale(1); }
+  30%      { transform: rotate(-12deg) scale(1.2); }
+  60%      { transform: rotate(10deg) scale(1.15); }
+}
 
 /* ==========================================
    ID Card
@@ -217,17 +224,53 @@ body {
 .stat b { display: block; font-family: var(--font-display); font-weight: 700; font-size: 1.2rem; color: var(--ink); }
 .stat span { font-size: 0.78rem; color: var(--ink-soft); font-weight: 700; letter-spacing: .02em; }
 
-.chips { list-style: none; display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
-.chip {
-  background: var(--panel);
-  color: var(--ink);
-  padding: 8px 14px;
-  border-radius: 999px;
-  font-weight: 600;
-  font-size: 0.92rem;
-  transition: transform .15s ease;
+.traits-label {
+  font-family: var(--font-hand);
+  font-size: 1.45rem; font-weight: 700;
+  color: var(--berry-ink);
+  text-align: center;
+  margin: 24px 0 2px;
 }
-.chip:hover { transform: translateY(-2px) rotate(-1.5deg); }
+.traits-label span { color: var(--star); }
+
+.chips { list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 10px; }
+.chip {
+  position: relative;
+  isolation: isolate;
+  background: linear-gradient(135deg, var(--panel), var(--panel-2));
+  color: var(--ink);
+  padding: 9px 16px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow-lift);
+  cursor: default;
+  transition: transform .22s cubic-bezier(.34,1.56,.64,1), box-shadow .22s ease, filter .22s ease;
+}
+.chip strong { color: var(--berry-ink); }
+.chip::before {
+  content: ""; position: absolute; inset: -2px; z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(62% 80% at 50% 50%, var(--berry), transparent 70%);
+  opacity: 0;
+  transition: opacity .25s ease;
+}
+.chip::after {
+  content: ""; position: absolute; top: 0; left: -120%; z-index: 1;
+  width: 55%; height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255,255,255,0.5), transparent);
+  transform: skewX(-18deg);
+  pointer-events: none;
+}
+.chip:hover {
+  transform: translateY(-4px) scale(1.05) rotate(-1.5deg);
+  box-shadow: 0 14px 24px -12px var(--berry-ink);
+  filter: brightness(1.03);
+}
+.chip:hover::before { opacity: 0.4; }
+.chip:hover::after { animation: chipShine .75s ease; }
+@keyframes chipShine { to { left: 130%; } }
 
 /* status sticker — the signature, gently bobbing */
 .status-sticker {
@@ -288,6 +331,13 @@ body {
 }
 .art img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.14)); pointer-events: none; }
 .art:hover { transform: translateY(-4px) rotate(-1.5deg); box-shadow: var(--shadow-lift); }
+
+/* gentle hover lift on the interactive cards (idcard handled by JS tilt) */
+.gallery, .links, .desk { will-change: transform; }
+.gallery:hover, .links:hover, .desk:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-soft), var(--shadow-lift);
+}
 
 /* lightbox */
 .lightbox {
@@ -439,8 +489,14 @@ textarea { resize: vertical; }
   .doodle  { animation: float 9s ease-in-out infinite; }
   .d2 { animation-delay: 1.5s; } .d3 { animation-delay: 3s; }
   .d4 { animation-delay: 2.2s; } .d5 { animation-delay: 4s; } .d6 { animation-delay: 0.8s; }
+
+  html.js .idcard.is-visible .chip {
+    animation: chipIn .55s cubic-bezier(.2,.8,.2,1) backwards;
+    animation-delay: calc(.35s + var(--i, 0) * .07s);
+  }
 }
 @keyframes float { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-14px) rotate(8deg); } }
+@keyframes chipIn { from { opacity: 0; transform: translateY(14px) scale(.82); } to { opacity: 1; transform: none; } }
 
 /* ==========================================
    Reduced Motion — kill ambient + entrance
