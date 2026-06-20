@@ -186,8 +186,18 @@ body {
 .avatar.no-img::after { content: "🍓"; font-size: 2.2rem; display: grid; place-items: center; inset: 3px; background: var(--panel); }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.eyebrow { font-family: var(--font-hand); font-size: 1.25rem; font-weight: 700; color: var(--berry-ink); line-height: 1; }
-.handle { font-family: var(--font-display); font-weight: 700; font-size: 1.7rem; color: var(--ink); }
+.eyebrow {
+  font-family: var(--font-hand); font-size: 1.25rem; font-weight: 700; color: var(--berry-ink); line-height: 1;
+  paint-order: stroke fill;
+  -webkit-text-stroke: 3px var(--card);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
+}
+.handle {
+  font-family: var(--font-display); font-weight: 700; font-size: 1.7rem; color: var(--ink);
+  paint-order: stroke fill;
+  -webkit-text-stroke: 4px var(--card);
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.30);
+}
 .tagline { color: var(--ink-soft); font-weight: 600; }
 
 /* intro line */
