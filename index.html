@@ -19,13 +19,15 @@
   <meta property="og:type" content="website" />
   <meta name="twitter:card" content="summary" />
 
-  <!-- set theme before paint to avoid a flash -->
+  <!-- mark js available + set theme before paint to avoid a flash -->
   <script>
     (function () {
+      var d = document.documentElement;
+      d.classList.add("js");
       try {
         var t = localStorage.getItem("theme");
         if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-        document.documentElement.setAttribute("data-theme", t);
+        d.setAttribute("data-theme", t);
       } catch (e) {}
     })();
   </script>
@@ -40,12 +42,12 @@
 <body>
   <!-- soft floating background doodles -->
   <div class="sky" aria-hidden="true">
-    <span class="doodle d1">★</span>
-    <span class="doodle d2">🫧</span>
-    <span class="doodle d3">✦</span>
-    <span class="doodle d4">🍰</span>
-    <span class="doodle d5">★</span>
-    <span class="doodle d6">🍓</span>
+    <span class="doodle d1" data-depth="14">★</span>
+    <span class="doodle d2" data-depth="22">🫧</span>
+    <span class="doodle d3" data-depth="10">✦</span>
+    <span class="doodle d4" data-depth="18">🍰</span>
+    <span class="doodle d5" data-depth="12">★</span>
+    <span class="doodle d6" data-depth="20">🍓</span>
   </div>
 
   <main class="page">
@@ -67,6 +69,8 @@
          SECTION 1 — ID CARD (who is Jazzy?)
          ========================================== -->
     <section class="card idcard reveal delay-1" aria-label="Artist ID card">
+      <div class="ribbon" aria-hidden="true"></div>
+
       <!-- cover banner (1376 × 768) -->
       <div class="cover">
         <img src="/ARTBanner.png" alt="Jazzy's cover banner"
@@ -92,11 +96,25 @@
         </div>
       </div>
 
+      <!-- intro line (from bio) -->
+      <p class="intro">hiiii I’m <strong>Jazzy</strong> and I draw characters I like! <span class="hand">⋆.𐙚</span></p>
+
+      <!-- social stats (animated count-up) -->
+      <div class="stats" aria-label="Instagram stats">
+        <div class="stat"><b data-count="52">0</b><span>posts</span></div>
+        <div class="stat"><b data-count="10200">0</b><span>followers</span></div>
+        <div class="stat"><b data-count="340">0</b><span>following</span></div>
+      </div>
+
       <ul class="chips" aria-label="About">
-        <!-- replace 00 with Jazzy's age -->
-        <li class="chip">🎂 <strong id="bioAge">00</strong></li>
+        <li class="chip">🎂 <strong>16</strong></li>
+        <li class="chip">🌸 she/her</li>
+        <li class="chip">🎨 Illustrator</li>
         <li class="chip">🧩 ENFP</li>
         <li class="chip">🖊️ drawn on iPad</li>
+        <li class="chip">🌍 Cn / Au</li>
+        <li class="chip">🗣️ English</li>
+        <li class="chip">✨ Multifandom</li>
       </ul>
     </section>
 
@@ -157,18 +175,15 @@
         </div>
 
         <div class="field">
-          <label for="customer">your name or @handle <span class="req">*</span></label>
-          <input id="customer" name="customer" type="text" placeholder="e.g. @your_handle" required maxlength="120" />
+          <label for="customer">your Telegram username <span class="req">*</span></label>
+          <input id="customer" name="customer" type="text" placeholder="@your_telegram" required maxlength="120" autocomplete="off" />
+          <p class="hint">so I can reply to you on Telegram 💬</p>
         </div>
 
         <div class="field">
           <label for="paintingClass">what do you want? <span class="req">*</span></label>
-          <select id="paintingClass" name="paintingClass" required>
-            <option value="" disabled selected>pick a style…</option>
-            <option value="Portrait (head/bust)">Portrait — head &amp; shoulders</option>
-            <option value="Three-quarter body">Three-quarter body</option>
-            <option value="Full character">Full character (full body)</option>
-          </select>
+          <input id="paintingClass" name="paintingClass" type="text" required maxlength="160"
+            placeholder="e.g. full-body character, chibi, couple portrait…" />
         </div>
 
         <div class="field">
@@ -185,8 +200,15 @@
         </div>
 
         <div class="field">
-          <label for="deadline">deadline <span class="req">*</span></label>
-          <input id="deadline" name="deadline" type="date" required />
+          <label>deadline <span class="req">*</span></label>
+          <div class="chip-pick" id="deadlinePick" role="group" aria-label="Choose a deadline">
+            <button type="button" class="pick" data-deadline="🌿 no rush — whenever works">🌿 no rush</button>
+            <button type="button" class="pick" data-deadline="🗓️ within 2 weeks">🗓️ within 2 weeks</button>
+            <button type="button" class="pick" data-deadline="⏳ within a month">⏳ within a month</button>
+            <button type="button" class="pick" data-deadline="__date__">📅 pick a date</button>
+          </div>
+          <input id="deadlineDate" name="deadlineDate" type="date" class="deadline-date is-hidden" />
+          <input id="deadline" name="deadline" type="hidden" />
         </div>
 
         <button type="submit" class="submit" id="submitBtn">
@@ -198,9 +220,14 @@
     </section>
 
     <footer class="foot reveal delay-5">
-      made with 🍓 by jazzy · <span id="year"></span>
+      made with 🍓 by AmirCollider for jazzy · <span id="year"></span>
     </footer>
   </main>
+
+  <!-- lightbox for the gallery -->
+  <div class="lightbox" id="lightbox" aria-hidden="true">
+    <img alt="Artwork preview" />
+  </div>
 
   <script src="/app.js" defer></script>
 </body>
