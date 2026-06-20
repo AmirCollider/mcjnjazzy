@@ -10,7 +10,7 @@
 //
 // Admins = ADMIN_IDS (comma-separated numeric ids) + TELEGRAM_CHAT_ID.
 
-import { tg, isAdmin, adminSet, cardText, cardKeyboard, putCommission } from "./_shared.js";
+import { tg, isAdmin, adminSet, esc, usernameOf, cardText, cardKeyboard, putCommission, setBlocked, listBlocked } from "./_shared.js";
 
 const HELP = [
   "🍓 <b>Jazzy Commission Bot</b>",
@@ -18,10 +18,13 @@ const HELP = [
   "/projects — counts + filters",
   "/active — projects in progress",
   "/done — finished projects",
+  "/block @user — stop someone submitting",
+  "/unblock @user — let them submit again",
+  "/blocked — list blocked people",
   "/id — show this chat &amp; admin ids",
   "/help — this menu",
   "",
-  "On each project: ✅ mark done / ↩️ reopen, 👁 view, 💬 DM the customer."
+  "On each project: ✅ done / ↩️ reopen, 👁 view, 💬 DM, 🚫 block, 🗑 delete."
 ].join("\n");
 
 // ==========================================
@@ -96,6 +99,27 @@ async function handleMessage(message, env) {
   if (cmd === "/active") { await listByStatus(env, chatId, "active"); return; }
   if (cmd === "/done")   { await listByStatus(env, chatId, "done");   return; }
 
+  if (cmd === "/block" || cmd === "/unblock") {
+    const arg = text.split(/\s+/)[1] || "";
+    const u = usernameOf(arg);
+    if (!u) {
+      await tg(env, "sendMessage", { chat_id: chatId, text: "Usage: " + cmd + " @username" });
+      return;
+    }
+    const block = cmd === "/block";
+    const ok = await setBlocked(env, u, block);
+    await tg(env, "sendMessage", {
+      chat_id: chatId,
+      parse_mode: "HTML",
+      text: ok
+        ? (block ? "🚫 Blocked @" : "✅ Unblocked @") + esc(u)
+        : "Couldn't update the blocklist — is storage configured?"
+    });
+    return;
+  }
+
+  if (cmd === "/blocked") { await sendBlockedList(env, chatId); return; }
+
   await tg(env, "sendMessage", { chat_id: chatId, text: "Unknown command. Try /help" });
 }
 
@@ -165,9 +189,80 @@ async function handleCallback(cb, env) {
     return;
   }
 
+  // block a customer (from a project card)
+  if (action === "blk") {
+    const ok = await setBlocked(env, arg, true);
+    await tg(env, "answerCallbackQuery", {
+      callback_query_id: cb.id,
+      text: ok ? "Blocked @" + arg + " 🚫" : "Couldn't block",
+      show_alert: true
+    });
+    return;
+  }
+
+  // unblock a customer (from the /blocked list)
+  if (action === "unblk") {
+    const ok = await setBlocked(env, arg, false);
+    await tg(env, "answerCallbackQuery", { callback_query_id: cb.id, text: ok ? "Unblocked ✅" : "Couldn't unblock" });
+    if (ok && messageId) {
+      await tg(env, "editMessageText", {
+        chat_id: chatId,
+        message_id: messageId,
+        text: "✅ <b>Unblocked</b> @" + esc(arg),
+        parse_mode: "HTML"
+      });
+    }
+    return;
+  }
+
+  // delete a project — ask to confirm first
+  if (action === "del") {
+    const record = await getRecord(env, arg);
+    await tg(env, "answerCallbackQuery", { callback_query_id: cb.id });
+    if (!record) return;
+    await tg(env, "editMessageReplyMarkup", {
+      chat_id: chatId,
+      message_id: messageId,
+      reply_markup: {
+        inline_keyboard: [[
+          { text: "🗑 Yes, delete", callback_data: "delyes:" + arg },
+          { text: "↩️ Keep it", callback_data: "delno:" + arg }
+        ]]
+      }
+    });
+    return;
+  }
+
+  // confirmed deletion
+  if (action === "delyes") {
+    if (env.COMMISSIONS) {
+      try { await env.COMMISSIONS.delete("c:" + arg); } catch (_) {}
+    }
+    await tg(env, "editMessageText", {
+      chat_id: chatId,
+      message_id: messageId,
+      text: "🗑 <b>Deleted</b> · <code>" + arg + "</code>",
+      parse_mode: "HTML"
+    });
+    await tg(env, "answerCallbackQuery", { callback_query_id: cb.id, text: "Deleted 🗑" });
+    return;
+  }
+
+  // cancelled deletion — restore the card buttons
+  if (action === "delno") {
+    const record = await getRecord(env, arg);
+    await tg(env, "answerCallbackQuery", { callback_query_id: cb.id, text: "Kept ✨" });
+    if (!record) return;
+    await tg(env, "editMessageReplyMarkup", {
+      chat_id: chatId,
+      message_id: messageId,
+      reply_markup: cardKeyboard(record, false)
+    });
+    return;
+  }
+
   await tg(env, "answerCallbackQuery", { callback_query_id: cb.id });
 }
-
 // ==========================================
 // sendSummary() — counts + filter buttons
 // ==========================================
@@ -193,6 +288,34 @@ async function sendSummary(env, chatId) {
       ]]
     }
   });
+}
+
+// ==========================================
+// sendBlockedList() — blocked usernames + unblock buttons
+// ==========================================
+async function sendBlockedList(env, chatId) {
+  if (!env.COMMISSIONS) {
+    await tg(env, "sendMessage", { chat_id: chatId, text: "Storage not configured." });
+    return;
+  }
+  const users = await listBlocked(env);
+  if (users.length === 0) {
+    await tg(env, "sendMessage", { chat_id: chatId, text: "No one is blocked 🌿" });
+    return;
+  }
+  await tg(env, "sendMessage", {
+    chat_id: chatId,
+    parse_mode: "HTML",
+    text: "🚫 <b>Blocked</b> — " + users.length
+  });
+  for (const u of users.slice(0, 30)) {
+    await tg(env, "sendMessage", {
+      chat_id: chatId,
+      parse_mode: "HTML",
+      text: "🚫 @" + esc(u),
+      reply_markup: { inline_keyboard: [[{ text: "✅ Unblock @" + u, callback_data: "unblk:" + u }]] }
+    });
+  }
 }
 
 // ==========================================
