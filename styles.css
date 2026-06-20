@@ -3,24 +3,24 @@
    mcjn_jazzy — Commission Hub
    ========================================== */
 
-/* ----- LIGHT theme (default) ----- */
+/* ----- LIGHT theme (default — readability-tuned) ----- */
 :root {
   --bg-1:       #FFF7F2;
   --bg-2:       #FFE9EF;
   --card:       #FFFFFF;
   --panel:      #FFE9EF;
-  --panel-2:    #FFD7E3;
-  --ink:        #5A3A2E;
-  --ink-soft:   #9C7A6B;
+  --panel-2:    #FFD0DF;
+  --ink:        #43281F;
+  --ink-soft:   #6E4B3C;
   --berry:      #FF6F91;
-  --berry-ink:  #E8447A;
-  --star:       #FFD45E;
-  --btn-bg:     #E8447A;
+  --berry-ink:  #D12E63;
+  --star:       #E6A52B;
+  --btn-bg:     #D12E63;
   --on-btn:     #FFFFFF;
-  --border:     rgba(255,255,255,0.9);
+  --border:     rgba(209, 46, 99, 0.10);
 
-  --shadow-soft: 0 22px 48px -26px rgba(232, 68, 122, 0.45);
-  --shadow-lift: 0 12px 26px -16px rgba(90, 58, 46, 0.38);
+  --shadow-soft: 0 22px 48px -26px rgba(209, 46, 99, 0.40);
+  --shadow-lift: 0 12px 26px -16px rgba(67, 40, 31, 0.34);
 
   --radius:   28px;
   --radius-s: 16px;
@@ -69,7 +69,7 @@ body {
    Floating Background Doodles
    ========================================== */
 .sky { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
-.doodle { position: absolute; opacity: 0.45; font-size: 1.6rem; }
+.doodle { position: absolute; opacity: 0.5; font-size: 1.6rem; will-change: transform; }
 .d1 { top: 11%; left: 8%;  color: var(--star); }
 .d2 { top: 26%; right: 9%;  font-size: 2.1rem; }
 .d3 { top: 60%; left: 6%;  color: var(--berry); }
@@ -130,7 +130,7 @@ body {
   padding: 28px;
   box-shadow: var(--shadow-soft);
   border: 2px solid var(--border);
-  transition: background-color .4s ease, box-shadow .4s ease;
+  transition: background-color .4s ease, box-shadow .4s ease, transform .25s ease;
 }
 
 .section-title {
@@ -147,7 +147,7 @@ body {
    ========================================== */
 .idcard { position: relative; overflow: hidden; }
 .ribbon {
-  position: absolute; top: 0; left: 0; right: 0; height: 10px;
+  position: absolute; top: 0; left: 0; right: 0; height: 6px; z-index: 3;
   background: linear-gradient(90deg, var(--berry), var(--panel-2), var(--star), var(--berry));
   background-size: 300% 100%;
   animation: ribbonShift 8s linear infinite;
@@ -186,11 +186,28 @@ body {
 .avatar.no-img::after { content: "🍓"; font-size: 2.2rem; display: grid; place-items: center; inset: 3px; background: var(--panel); }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.eyebrow { font-family: var(--font-hand); font-size: 1.2rem; color: var(--ink-soft); line-height: 1; }
+.eyebrow { font-family: var(--font-hand); font-size: 1.25rem; font-weight: 700; color: var(--berry-ink); line-height: 1; }
 .handle { font-family: var(--font-display); font-weight: 700; font-size: 1.7rem; color: var(--ink); }
-.tagline { color: var(--ink-soft); font-weight: 500; }
+.tagline { color: var(--ink-soft); font-weight: 600; }
 
-.chips { list-style: none; display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+/* intro line */
+.intro { margin-top: 16px; color: var(--ink); font-weight: 500; }
+.intro .hand { font-family: var(--font-hand); font-size: 1.3rem; font-weight: 700; color: var(--berry-ink); }
+
+/* social stats */
+.stats { display: flex; gap: 10px; margin-top: 16px; }
+.stat {
+  flex: 1; text-align: center;
+  background: var(--panel);
+  border-radius: var(--radius-s);
+  padding: 12px 8px;
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.stat:hover { transform: translateY(-3px); box-shadow: var(--shadow-lift); }
+.stat b { display: block; font-family: var(--font-display); font-weight: 700; font-size: 1.2rem; color: var(--ink); }
+.stat span { font-size: 0.78rem; color: var(--ink-soft); font-weight: 700; letter-spacing: .02em; }
+
+.chips { list-style: none; display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
 .chip {
   background: var(--panel);
   color: var(--ink);
@@ -198,11 +215,13 @@ body {
   border-radius: 999px;
   font-weight: 600;
   font-size: 0.92rem;
+  transition: transform .15s ease;
 }
+.chip:hover { transform: translateY(-2px) rotate(-1.5deg); }
 
 /* status sticker — the signature, gently bobbing */
 .status-sticker {
-  position: absolute; top: 18px; right: 18px;
+  position: absolute; top: 18px; right: 18px; z-index: 4;
   display: inline-flex; align-items: center; gap: 7px;
   background: var(--berry);
   color: #fff;
@@ -225,7 +244,7 @@ body {
 /* ==========================================
    Link Bridges
    ========================================== */
-.group-label { font-family: var(--font-hand); font-size: 1.25rem; color: var(--ink-soft); margin: 16px 0 8px; }
+.group-label { font-family: var(--font-hand); font-size: 1.3rem; font-weight: 700; color: var(--berry-ink); margin: 16px 0 8px; }
 .link-row { display: flex; flex-wrap: wrap; gap: 12px; }
 
 .link-pill {
@@ -254,10 +273,24 @@ body {
   background: radial-gradient(circle at 50% 38%, var(--panel) 0%, var(--card) 100%);
   display: grid; place-items: center;
   padding: 10px;
+  cursor: zoom-in;
   transition: transform .18s ease, box-shadow .18s ease;
 }
-.art img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.14)); }
+.art img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.14)); pointer-events: none; }
 .art:hover { transform: translateY(-4px) rotate(-1.5deg); box-shadow: var(--shadow-lift); }
+
+/* lightbox */
+.lightbox {
+  position: fixed; inset: 0; z-index: 50;
+  display: none; place-items: center;
+  padding: 24px;
+  background: rgba(36, 24, 32, 0.74);
+  backdrop-filter: blur(6px);
+  cursor: zoom-out;
+}
+.lightbox.open { display: grid; animation: lbIn .25s ease; }
+.lightbox img { max-width: min(92vw, 720px); max-height: 86vh; border-radius: var(--radius-s); box-shadow: var(--shadow-soft); }
+@keyframes lbIn { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
 
 /* ==========================================
    Stitched Divider
@@ -267,13 +300,13 @@ body {
 /* ==========================================
    Commission Form
    ========================================== */
-.desk-note { color: var(--ink-soft); font-weight: 500; margin: 6px 0 18px; }
+.desk-note { color: var(--ink-soft); font-weight: 600; margin: 6px 0 18px; }
 .form { display: flex; flex-direction: column; gap: 16px; }
 
 .field { display: flex; flex-direction: column; gap: 6px; }
-.field label { font-weight: 600; font-size: 0.95rem; }
+.field label { font-weight: 700; font-size: 0.95rem; color: var(--ink); }
 .req { color: var(--berry-ink); }
-.hint { font-family: var(--font-hand); font-size: 1.1rem; color: var(--ink-soft); }
+.hint { font-family: var(--font-hand); font-size: 1.2rem; font-weight: 700; color: var(--ink-soft); }
 
 input, select, textarea {
   font-family: var(--font-body);
@@ -285,13 +318,37 @@ input, select, textarea {
   padding: 12px 14px;
   transition: border-color .15s ease, box-shadow .15s ease, background .4s ease;
 }
-input::placeholder, textarea::placeholder { color: var(--ink-soft); opacity: 0.7; }
+input::placeholder, textarea::placeholder { color: var(--ink-soft); opacity: 0.85; }
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--berry);
   box-shadow: 0 0 0 4px rgba(255, 111, 145, 0.20);
 }
 textarea { resize: vertical; }
+
+/* deadline chip picker */
+.chip-pick { display: flex; flex-wrap: wrap; gap: 10px; }
+.pick {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--ink);
+  background: var(--panel);
+  border: 2px solid transparent;
+  border-radius: 999px;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: transform .15s ease, background .15s ease, color .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.pick:hover { transform: translateY(-2px); background: var(--panel-2); }
+.pick.is-active {
+  background: var(--btn-bg);
+  color: var(--on-btn);
+  border-color: var(--berry-ink);
+  box-shadow: var(--shadow-lift);
+}
+.deadline-date { margin-top: 12px; align-self: flex-start; }
+.is-hidden { display: none !important; }
 
 /* honeypot — hidden from real users */
 .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
@@ -323,45 +380,61 @@ textarea { resize: vertical; }
 .submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 @keyframes shine { to { left: 130%; } }
 
-.form-msg { font-weight: 600; text-align: center; min-height: 1.2em; }
+.form-msg { font-weight: 700; text-align: center; min-height: 1.2em; }
 .form-msg.ok  { color: #2e9e6b; }
 .form-msg.err { color: var(--berry-ink); }
+
+/* confetti burst on success */
+.confetti {
+  position: fixed; z-index: 60; pointer-events: none;
+  font-size: 1.2rem; will-change: transform, opacity;
+  animation: pop 1s ease-out forwards;
+}
+@keyframes pop {
+  0%   { transform: translate(0,0) scale(.6) rotate(0deg); opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(1.1) rotate(var(--rot)); opacity: 0; }
+}
 
 /* ==========================================
    Footer
    ========================================== */
-.foot { text-align: center; color: var(--ink-soft); font-weight: 500; font-size: 0.9rem; margin-top: 8px; }
+.foot { text-align: center; color: var(--ink-soft); font-weight: 600; font-size: 0.9rem; margin-top: 8px; }
 
 /* ==========================================
    Responsive
    ========================================== */
 @media (max-width: 460px) {
   .idcard-top { flex-direction: column; align-items: center; text-align: center; }
+  .intro { text-align: center; }
   .chips { justify-content: center; }
   .link-pill { flex: 1 1 100%; }
-  .status-sticker { position: static; margin-bottom: 14px; align-self: flex-start; }
+  .status-sticker { top: 14px; right: 14px; }
 }
 
 /* ==========================================
-   Motion — entrance + ambient (opt-in)
+   Motion — entrance (IntersectionObserver) + ambient
    ========================================== */
 @media (prefers-reduced-motion: no-preference) {
-  .reveal { opacity: 0; transform: translateY(18px); animation: rise .6s cubic-bezier(.2,.7,.2,1) forwards; }
-  .delay-1 { animation-delay: .08s; }
-  .delay-2 { animation-delay: .16s; }
-  .delay-3 { animation-delay: .24s; }
-  .delay-4 { animation-delay: .32s; }
-  .delay-5 { animation-delay: .40s; }
+  html.js .reveal {
+    opacity: 0;
+    transform: translateY(22px);
+    transition: opacity .6s cubic-bezier(.2,.7,.2,1), transform .6s cubic-bezier(.2,.7,.2,1);
+  }
+  html.js .reveal.is-visible { opacity: 1; transform: none; }
+  .delay-1 { transition-delay: .05s; }
+  .delay-2 { transition-delay: .12s; }
+  .delay-3 { transition-delay: .19s; }
+  .delay-4 { transition-delay: .26s; }
+  .delay-5 { transition-delay: .33s; }
   .doodle  { animation: float 9s ease-in-out infinite; }
   .d2 { animation-delay: 1.5s; } .d3 { animation-delay: 3s; }
   .d4 { animation-delay: 2.2s; } .d5 { animation-delay: 4s; } .d6 { animation-delay: 0.8s; }
 }
-@keyframes rise  { to { opacity: 1; transform: none; } }
 @keyframes float { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-14px) rotate(8deg); } }
 
 /* ==========================================
    Reduced Motion — kill ambient + entrance
    ========================================== */
 @media (prefers-reduced-motion: reduce) {
-  .doodle, .status-sticker, .status-dot, .ribbon, .avatar::before { animation: none; }
+  .doodle, .status-sticker, .status-dot, .ribbon, .avatar::before, .confetti { animation: none; }
 }
