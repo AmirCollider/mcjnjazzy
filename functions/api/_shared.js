@@ -108,7 +108,14 @@ export function cardKeyboard(record, includeView) {
   rows.push(first);
 
   const u = usernameOf(record.customer);
-  if (u) rows.push([{ text: "💬 DM @" + u, url: "https://t.me/" + u }]);
+  if (u) {
+    rows.push([
+      { text: "💬 DM @" + u, url: "https://t.me/" + u },
+      { text: "🚫 Block", callback_data: "blk:" + u }
+    ]);
+  }
+
+  rows.push([{ text: "🗑 Delete", callback_data: "del:" + record.id }]);
 
   return { inline_keyboard: rows };
 }
@@ -127,4 +134,59 @@ export async function putCommission(env, record) {
       deadline: record.deadline
     }
   });
+}
+
+// ==========================================
+// normUser() — normalized (lowercased) TG username
+// ==========================================
+export function normUser(handle) {
+  const u = usernameOf(handle);
+  return u ? u.toLowerCase() : null;
+}
+
+// ==========================================
+// isBlocked() — is this customer on the blocklist?
+// ==========================================
+export async function isBlocked(env, handle) {
+  if (!env.COMMISSIONS) return false;
+  const u = normUser(handle);
+  if (!u) return false;
+  try {
+    return (await env.COMMISSIONS.get("blk:" + u)) !== null;
+  } catch (_) {
+    return false;
+  }
+}
+
+// ==========================================
+// setBlocked() — add/remove a username on the blocklist
+// ==========================================
+export async function setBlocked(env, handle, blocked) {
+  if (!env.COMMISSIONS) return false;
+  const u = normUser(handle);
+  if (!u) return false;
+  try {
+    if (blocked) await env.COMMISSIONS.put("blk:" + u, "1", { metadata: { at: Date.now() } });
+    else await env.COMMISSIONS.delete("blk:" + u);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+// ==========================================
+// listBlocked() — all blocked usernames
+// ==========================================
+export async function listBlocked(env) {
+  if (!env.COMMISSIONS) return [];
+  const out = [];
+  let cursor;
+  try {
+    do {
+      const page = await env.COMMISSIONS.list({ prefix: "blk:", cursor });
+      page.keys.forEach((k) => out.push(k.name.replace(/^blk:/, "")));
+      cursor = page.list_complete ? null : page.cursor;
+    } while (cursor);
+  } catch (_) {}
+  return out;
 }
