@@ -1,15 +1,14 @@
 // ==========================================
 // functions/api/commission.js
-// Server-Side Telegram Relay (Pages Function)
+// Form Intake → store in KV + notify Telegram
 // mcjn_jazzy — Commission Hub
 // ==========================================
 //
-// Route: POST /api/commission   (auto-mapped by Cloudflare Pages)
-// Secrets required (set in Pages dashboard → Settings → Variables):
-//   TELEGRAM_BOT_TOKEN   — token from @BotFather
-//   TELEGRAM_CHAT_ID     — Jazzy's chat id (where messages are delivered)
-//
-// The bot token NEVER touches the browser; it lives only here on the edge.
+// Route: POST /api/commission
+// Secrets:  TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+// Binding:  COMMISSIONS (KV)  — optional but recommended
+
+import { tg, json, esc, cardText, cardKeyboard, putCommission } from "./_shared.js";
 
 // ==========================================
 // onRequestPost() — entry point for POST
@@ -33,29 +32,34 @@ export async function onRequestPost(context) {
       }
     }
 
-    const token  = env.TELEGRAM_BOT_TOKEN;
-    const chatId = env.TELEGRAM_CHAT_ID;
-    if (!token || !chatId) {
+    if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) {
       return json({ ok: false, error: "Server not configured" }, 500);
     }
 
-    const text = buildMessage(data);
+    // build + persist the commission record
+    const id = Date.now().toString();
+    const record = {
+      id: id,
+      customer: String(data.customer).trim(),
+      paintingClass: String(data.paintingClass).trim(),
+      brief: String(data.brief).trim(),
+      refs: data.refs ? String(data.refs).trim() : "",
+      deadline: String(data.deadline).trim(),
+      status: "active",
+      createdAt: Date.now()
+    };
 
-    const tgRes = await fetch(
-      "https://api.telegram.org/bot" + token + "/sendMessage",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chat_id: chatId,
-          text: text,
-          parse_mode: "HTML",
-          disable_web_page_preview: false
-        })
-      }
-    );
+    await putCommission(env, record);
 
-    const tgData = await tgRes.json();
+    // notify Jazzy with action buttons
+    const tgData = await tg(env, "sendMessage", {
+      chat_id: env.TELEGRAM_CHAT_ID,
+      text: cardText(record, true),
+      parse_mode: "HTML",
+      disable_web_page_preview: true,
+      reply_markup: cardKeyboard(record, false)
+    });
+
     if (!tgData.ok) {
       return json({ ok: false, error: "Telegram rejected the message" }, 502);
     }
@@ -71,44 +75,4 @@ export async function onRequestPost(context) {
 // ==========================================
 export function onRequestGet() {
   return json({ ok: false, error: "Method not allowed" }, 405);
-}
-
-// ==========================================
-// buildMessage() — format the Telegram card
-// ==========================================
-function buildMessage(d) {
-  const refs = d.refs && d.refs.trim() ? esc(d.refs) : "—";
-  return [
-    "🍓 <b>NEW COMMISSION REQUEST</b> 🍓",
-    "",
-    "👤 <b>From:</b> " + esc(d.customer),
-    "🎨 <b>Type:</b> " + esc(d.paintingClass),
-    "📅 <b>Deadline:</b> " + esc(d.deadline),
-    "",
-    "📝 <b>Brief:</b>",
-    esc(d.brief),
-    "",
-    "🔗 <b>References:</b>",
-    refs
-  ].join("\n");
-}
-
-// ==========================================
-// esc() — escape HTML for Telegram parse_mode
-// ==========================================
-function esc(value) {
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
-
-// ==========================================
-// json() — JSON response helper
-// ==========================================
-function json(body, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json" }
-  });
 }
