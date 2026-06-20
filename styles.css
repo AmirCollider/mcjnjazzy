@@ -1,0 +1,257 @@
+/* ==========================================
+   styles.css — Theme Tokens & Layout
+   mcjn_jazzy — Commission Hub
+   ========================================== */
+
+/* ----- design tokens ----- */
+:root {
+  --cream:          #FFF7F2;
+  --blush:          #FFE9EF;
+  --blush-deep:     #FFD7E3;
+  --strawberry:     #FF6F91;
+  --strawberry-ink: #E8447A;
+  --chocolate:      #5A3A2E;
+  --cocoa:          #9C7A6B;
+  --star:           #FFD45E;
+  --card:           #FFFFFF;
+
+  --shadow-soft: 0 18px 40px -22px rgba(232, 68, 122, 0.45);
+  --shadow-lift: 0 10px 24px -16px rgba(90, 58, 46, 0.40);
+  --radius:   28px;
+  --radius-s: 16px;
+
+  --font-display: "Fredoka", system-ui, sans-serif;
+  --font-body:    "Quicksand", system-ui, sans-serif;
+  --font-hand:    "Caveat", cursive;
+}
+
+/* ----- reset ----- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  color: var(--chocolate);
+  background:
+    radial-gradient(1200px 700px at 50% -10%, var(--blush) 0%, transparent 60%),
+    var(--cream);
+  min-height: 100dvh;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ==========================================
+   Floating Background Doodles
+   ========================================== */
+.sky { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+.doodle { position: absolute; opacity: 0.5; font-size: 1.6rem; animation: float 9s ease-in-out infinite; }
+.d1 { top: 12%; left: 8%;  color: var(--star); }
+.d2 { top: 28%; right: 10%; font-size: 2.2rem; animation-delay: 1.5s; }
+.d3 { top: 62%; left: 6%;  color: var(--strawberry); animation-delay: 3s; }
+.d4 { top: 78%; right: 12%; font-size: 2rem; animation-delay: 2.2s; }
+.d5 { top: 46%; right: 22%; color: var(--star); animation-delay: 4s; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(-14px) rotate(8deg); }
+}
+
+/* ==========================================
+   Page Wrapper
+   ========================================== */
+.page {
+  position: relative;
+  z-index: 1;
+  width: min(680px, 92vw);
+  margin: 0 auto;
+  padding: 48px 0 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* ==========================================
+   Card Base (cloud-floating panels)
+   ========================================== */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 28px;
+  box-shadow: var(--shadow-soft);
+  border: 2px solid #fff;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.35rem;
+  color: var(--strawberry-ink);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-title span { color: var(--star); }
+
+/* ==========================================
+   ID Card
+   ========================================== */
+.idcard { position: relative; overflow: hidden; background: linear-gradient(180deg, #fff 0%, var(--blush) 220%); }
+.ribbon { position: absolute; top: 0; left: 0; right: 0; height: 10px; background: linear-gradient(90deg, var(--strawberry), var(--blush-deep), var(--star)); }
+
+.idcard-top { display: flex; align-items: center; gap: 18px; margin-top: 6px; }
+
+.avatar {
+  width: 84px; height: 84px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--blush);
+  display: grid; place-items: center;
+  font-size: 2.2rem;
+  box-shadow: var(--shadow-lift);
+  border: 3px solid #fff;
+  overflow: hidden;
+}
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.eyebrow {
+  font-family: var(--font-hand);
+  font-size: 1.15rem;
+  color: var(--cocoa);
+  line-height: 1;
+}
+.handle { font-family: var(--font-display); font-weight: 700; font-size: 1.7rem; color: var(--chocolate); }
+.tagline { color: var(--cocoa); font-weight: 500; }
+
+/* about chips */
+.chips { list-style: none; display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.chip {
+  background: var(--blush);
+  color: var(--chocolate);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+/* status sticker — the signature, gently bobbing */
+.status-sticker {
+  position: absolute; top: 18px; right: 18px;
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--strawberry);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.82rem;
+  box-shadow: 0 10px 18px -8px var(--strawberry-ink);
+  animation: bob 3.4s ease-in-out infinite;
+}
+.status-dot { width: 9px; height: 9px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 4px rgba(255,255,255,0.35); animation: pulse 1.8s ease-in-out infinite; }
+
+@keyframes bob   { 0%,100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-6px) rotate(2deg); } }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* ==========================================
+   Link Bridges
+   ========================================== */
+.group-label { font-family: var(--font-hand); font-size: 1.2rem; color: var(--cocoa); margin: 16px 0 8px; }
+.link-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+
+.link-pill {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--blush);
+  color: var(--chocolate);
+  text-decoration: none;
+  font-weight: 600;
+  padding: 14px;
+  border-radius: var(--radius-s);
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.link-pill:hover { transform: translateY(-3px); box-shadow: var(--shadow-lift); background: var(--blush-deep); }
+.link-pill.folio { background: var(--strawberry); color: #fff; }
+.link-pill.folio:hover { background: var(--strawberry-ink); }
+
+/* ==========================================
+   Stitched Divider
+   ========================================== */
+.stitch {
+  height: 0;
+  border-top: 3px dashed var(--blush-deep);
+  margin: 4px 8px;
+  opacity: 0.9;
+}
+
+/* ==========================================
+   Commission Form
+   ========================================== */
+.desk-note { color: var(--cocoa); font-weight: 500; margin: 6px 0 18px; }
+.form { display: flex; flex-direction: column; gap: 16px; }
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-weight: 600; font-size: 0.95rem; }
+.req { color: var(--strawberry-ink); }
+.hint { font-family: var(--font-hand); font-size: 1.05rem; color: var(--cocoa); }
+
+input, select, textarea {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: var(--chocolate);
+  background: var(--cream);
+  border: 2px solid var(--blush-deep);
+  border-radius: var(--radius-s);
+  padding: 12px 14px;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+input::placeholder, textarea::placeholder { color: var(--cocoa); opacity: 0.7; }
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--strawberry);
+  box-shadow: 0 0 0 4px rgba(255, 111, 145, 0.18);
+}
+textarea { resize: vertical; }
+
+/* honeypot — hidden from real users */
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+.submit {
+  margin-top: 6px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: #fff;
+  background: var(--strawberry);
+  border: none;
+  border-radius: 999px;
+  padding: 15px;
+  cursor: pointer;
+  box-shadow: 0 12px 22px -10px var(--strawberry-ink);
+  transition: transform .15s ease, background .15s ease;
+}
+.submit:hover:not(:disabled) { transform: translateY(-2px); background: var(--strawberry-ink); }
+.submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+.form-msg { font-weight: 600; text-align: center; min-height: 1.2em; }
+.form-msg.ok  { color: #2e9e6b; }
+.form-msg.err { color: var(--strawberry-ink); }
+
+/* ==========================================
+   Footer
+   ========================================== */
+.foot { text-align: center; color: var(--cocoa); font-weight: 500; font-size: 0.9rem; margin-top: 8px; }
+
+/* ==========================================
+   Responsive
+   ========================================== */
+@media (max-width: 460px) {
+  .idcard-top { flex-direction: column; text-align: center; }
+  .chips { justify-content: center; }
+  .link-grid { grid-template-columns: 1fr; }
+  .status-sticker { position: static; margin-bottom: 14px; align-self: flex-start; }
+}
+
+/* ==========================================
+   Reduced Motion
+   ========================================== */
+@media (prefers-reduced-motion: reduce) {
+  .doodle, .status-sticker, .status-dot { animation: none; }
+}

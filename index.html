@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<!-- ==========================================
+     index.html — Page Shell & Structure
+     mcjn_jazzy — Commission Hub
+     ========================================== -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mcjn_jazzy 🍓 commissions</title>
+  <meta name="description" content="Who Jazzy is, the art she makes, and how to commission her — all in one cozy little hub." />
+
+  <!-- Fonts: rounded display + soft body + handwritten accent -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@400;500;600;700&family=Caveat:wght@500;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <!-- soft floating background doodles -->
+  <div class="sky" aria-hidden="true">
+    <span class="doodle d1">★</span>
+    <span class="doodle d2">🫧</span>
+    <span class="doodle d3">✦</span>
+    <span class="doodle d4">🍰</span>
+    <span class="doodle d5">★</span>
+  </div>
+
+  <main class="page">
+
+    <!-- ==========================================
+         SECTION 1 — ID CARD (who is Jazzy?)
+         ========================================== -->
+    <section class="card idcard" aria-label="Artist ID card">
+      <div class="ribbon" aria-hidden="true"></div>
+
+      <!-- bobbing strawberry status sticker (signature element) -->
+      <div class="status-sticker" title="Current status">
+        <span class="status-dot"></span>
+        <span class="status-text" id="statusText">DTIYS on going!</span>
+      </div>
+
+      <div class="idcard-top">
+        <div class="avatar" role="img" aria-label="Jazzy's avatar">
+          <!-- Replace with real avatar: put avatar.png in the repo root and swap the line below -->
+          <span class="avatar-fallback">🍓</span>
+          <!-- <img src="/avatar.png" alt="Jazzy's avatar" /> -->
+        </div>
+
+        <div class="idcard-id">
+          <p class="eyebrow">artist id card</p>
+          <h1 class="handle">@mcjn_jazzy</h1>
+          <p class="tagline">cute, soft, anime-ish illustration 🌷</p>
+        </div>
+      </div>
+
+      <ul class="chips" aria-label="About">
+        <li class="chip">🎂 <strong id="bioAge">FILL: age</strong></li>
+        <li class="chip">🧩 ENFP</li>
+        <li class="chip">🖊️ drawn on iPad</li>
+      </ul>
+    </section>
+
+    <!-- ==========================================
+         SECTION 2 — BRIDGES (portfolio + socials)
+         ========================================== -->
+    <section class="card links" aria-label="Where to find Jazzy">
+      <h2 class="section-title">my little corners <span>✦</span></h2>
+
+      <p class="group-label">portfolio</p>
+      <div class="link-grid">
+        <a class="link-pill folio" href="FILL_PINTEREST_URL" target="_blank" rel="noopener">📌 Pinterest</a>
+        <a class="link-pill folio" href="FILL_YOUTUBE_URL" target="_blank" rel="noopener">▶️ YouTube</a>
+      </div>
+
+      <p class="group-label">say hi</p>
+      <div class="link-grid">
+        <a class="link-pill" href="FILL_INSTAGRAM_URL" target="_blank" rel="noopener">📷 Instagram</a>
+        <a class="link-pill" href="FILL_THREADS_URL" target="_blank" rel="noopener">🧵 Threads</a>
+        <a class="link-pill" href="FILL_TWITTER_URL" target="_blank" rel="noopener">🐦 Twitter / X</a>
+        <a class="link-pill" href="FILL_TIKTOK_URL" target="_blank" rel="noopener">🎵 TikTok</a>
+      </div>
+    </section>
+
+    <!-- stitched divider -->
+    <div class="stitch" aria-hidden="true"></div>
+
+    <!-- ==========================================
+         SECTION 3 — COMMISSION DESK (order form)
+         ========================================== -->
+    <section class="card desk" aria-label="Commission desk">
+      <h2 class="section-title">commission desk <span>🍰</span></h2>
+      <p class="desk-note">fill the little form below and your request flies straight to me 🕊️</p>
+
+      <form id="commissionForm" class="form" novalidate>
+
+        <!-- honeypot: hidden from humans, catches bots -->
+        <div class="hp" aria-hidden="true">
+          <label>Leave this empty
+            <input type="text" name="website" tabindex="-1" autocomplete="off" />
+          </label>
+        </div>
+
+        <div class="field">
+          <label for="customer">your name or @handle <span class="req">*</span></label>
+          <input id="customer" name="customer" type="text" placeholder="e.g. @your_handle" required maxlength="120" />
+        </div>
+
+        <div class="field">
+          <label for="paintingClass">what do you want? <span class="req">*</span></label>
+          <select id="paintingClass" name="paintingClass" required>
+            <option value="" disabled selected>pick a style…</option>
+            <option value="Portrait (head/bust)">Portrait — head &amp; shoulders</option>
+            <option value="Three-quarter body">Three-quarter body</option>
+            <option value="Full character">Full character (full body)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="brief">tell me your idea <span class="req">*</span></label>
+          <textarea id="brief" name="brief" rows="5" required maxlength="2000"
+            placeholder="the idea, the pose, colors you love, the overall mood… anything that helps me picture it 🎨"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="refs">reference links</label>
+          <textarea id="refs" name="refs" rows="2" maxlength="1000"
+            placeholder="paste image links here (one per line) — Pinterest, Drive, imgur, anything 🔗"></textarea>
+          <p class="hint">links only for now — file upload is coming soon 🫧</p>
+        </div>
+
+        <div class="field">
+          <label for="deadline">deadline <span class="req">*</span></label>
+          <input id="deadline" name="deadline" type="date" required />
+        </div>
+
+        <button type="submit" class="submit" id="submitBtn">
+          <span class="btn-label">send my request</span> 💌
+        </button>
+
+        <p class="form-msg" id="formMsg" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <footer class="foot">
+      made with 🍓 by jazzy · <span id="year"></span>
+    </footer>
+  </main>
+
+  <script src="/app.js" defer></script>
+</body>
+</html>
