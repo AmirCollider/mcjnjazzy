@@ -7,10 +7,6 @@
 // init() — page setup on load
 // ==========================================
 (function init() {
-  // block past dates on the deadline date picker
-  const deadlineDate = document.getElementById("deadlineDate");
-  if (deadlineDate) deadlineDate.min = new Date().toISOString().split("T")[0];
-
   const form = document.getElementById("commissionForm");
   if (form) form.addEventListener("submit", handleSubmit);
 
@@ -22,7 +18,7 @@
   initTilt();
   initLightbox();
   initSparkleClicks();
-  initDeadlinePicker();
+  initEstimate();
 })();
 
 // ==========================================
