@@ -274,12 +274,12 @@
         </div>
 
         <!-- references -->
-        <div class="field">
-          <label for="refs">references &amp; files <span class="req">*</span></label>
-          <textarea id="refs" name="refs" rows="3" required maxlength="1500"
-            placeholder="reference sheets, mood boards, links (one per line) — Pinterest, Drive, imgur… 🔗"></textarea>
-          <p class="hint">clear refs help me stay accurate — links only for now 🫧</p>
-        </div>
+<div class="field">
+  <label for="refs">references &amp; files <span class="req">*</span></label>
+  <textarea id="refs" name="refs" rows="3" required maxlength="1500"
+    placeholder="reference sheets, mood boards, VGen character profiles, links (one per line) — Pinterest, Drive, imgur… 🔗"></textarea>
+  <p class="hint">clear refs help me stay accurate — links only for now 🫧</p>
+</div>
 
         <!-- extra info -->
         <div class="field">
@@ -295,29 +295,34 @@
           <small>before optional complexity / suggestive fees</small>
         </div>
 
-        <!-- agreements -->
+       <!-- agreements -->
         <div class="field">
           <label>please read &amp; agree <span class="req">*</span></label>
+          <p class="tos-hint">tap any <span class="tos-ink">pink words</span> to read the full rules 🌸</p>
           <ul class="tos">
             <li class="agree">
               <label><input type="checkbox" name="agreeTos" />
-                <span>I’ve read the <strong>General TOS</strong> — no tracing, no AI use/training, signature/watermark may apply.</span></label>
+                <span>I've read the <button type="button" class="tos-link" data-doc="tos">General TOS</button> — no tracing, no AI use/training, signature/watermark may apply.</span></label>
             </li>
             <li class="agree">
               <label><input type="checkbox" name="agreeDraw" />
-                <span>I’ve read the <strong>Will / Won’t Draw</strong> list (no explicit NSFW, heavy gore, furry/anthro, realism, mecha…).</span></label>
+                <span>I've read the <button type="button" class="tos-link" data-doc="draw">Will / Won't Draw</button> list (no explicit NSFW, heavy gore, furry/anthro, realism, mecha…).</span></label>
             </li>
             <li class="agree">
               <label><input type="checkbox" name="agreeRefund" />
-                <span>I understand the <strong>refund</strong> policy (no refunds after sketch approval).</span></label>
+                <span>I understand the <button type="button" class="tos-link" data-doc="refund">refund</button> policy (no refunds after sketch approval).</span></label>
             </li>
             <li class="agree">
               <label><input type="checkbox" name="agreeTime" />
-                <span>I understand turnaround is <strong>~2–6 weeks</strong> with <strong>no strict deadline</strong>.</span></label>
+                <span>I understand the <button type="button" class="tos-link" data-doc="time">turnaround</button> is ~2–6 weeks with no strict deadline.</span></label>
             </li>
             <li class="agree">
               <label><input type="checkbox" name="agreePay" />
-                <span>I agree to <strong>100% upfront via PayPal</strong> (AUD) before work begins.</span></label>
+                <span>I agree to 100% upfront via <button type="button" class="tos-link" data-doc="pay">PayPal</button> (AUD) before work begins.</span></label>
+            </li>
+            <li class="agree agree-all">
+              <label><input type="checkbox" name="agreeAll" />
+                <span>I confirm I have <button type="button" class="tos-link" data-doc="all">read all the rules above in full</button>.</span></label>
             </li>
           </ul>
         </div>
@@ -340,6 +345,92 @@
     <img alt="Artwork preview" />
   </div>
 
+  <!-- ==========================================
+       Terms of Service — modal + full policy docs
+       ========================================== -->
+  <div class="tos-modal" id="tosModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="tosModalTitle">
+    <div class="tos-modal-panel">
+      <button type="button" class="tos-close" id="tosClose" aria-label="Close">✕</button>
+      <h3 class="tos-modal-title" id="tosModalTitle"></h3>
+      <div class="tos-modal-body" id="tosModalBody"></div>
+    </div>
+  </div>
+
+  <!-- hidden source for each policy (cloned into the modal on demand) -->
+  <div id="tosDocs" hidden>
+    <article data-doc="tos" data-title="🍓 General Terms of Service">
+      <ul>
+        <li>I reserve the right to decline any commission request if I feel uncomfortable or unable to complete it.</li>
+        <li>Characters with highly detailed designs (e.g. Hoyoverse, Arknights, Wuthering Waves, etc.) may incur an additional <strong>10–25% complexity fee</strong> for bust up, half body, and full body commissions.</li>
+        <li><strong>No tracing. No AI — in any shape or form.</strong> Not to train AI, not to "enhance" my work, not to add to or change it in any way. This includes tools like Grok, ChatGPT, Sora AI, PixAI, and any other AI tool. This applies to past, present, and future commissions with me.</li>
+        <li>I retain full rights to the commissioned artwork unless commercial rights are discussed separately. You may use it for personal use, profile pictures, banners, and reposting <strong>with credit</strong>. Commercial reproduction, resale, NFT/AI use, tracing, or editing is prohibited. I reserve the right to include a small signature or watermark.</li>
+        <li>If you wish to commission multiple illustrations, please submit each request separately.</li>
+        <li>Please provide clear references for your character. I am not responsible for inaccuracies caused by unclear or missing information.</li>
+        <li>The commission includes <strong>3 revision stages: sketch, lineart, and base colour</strong>. Minor corrections may be requested during these stages. Major changes may incur an additional fee.</li>
+      </ul>
+    </article>
+
+    <article data-doc="draw" data-title="🎨 Will / Won't Draw">
+      <p class="tos-sub">✅ Will draw</p>
+      <ul>
+        <li>Humans with animal features (ears, tails, wings, horns)</li>
+        <li>Slightly suggestive art (body language &amp; posing, expressions, tight-fitting clothing or emphasized body parts, partially unbuttoned garments, cleavage) — <strong>+15–25% fee</strong></li>
+        <li>Mild / minimal gore</li>
+        <li>OCs, fanart, personas, avatars (Roblox, etc.)</li>
+        <li>Twinks / femboys</li>
+      </ul>
+      <p class="tos-sub tos-sub-no">🚫 Won't draw</p>
+      <ul>
+        <li>Any animal-textured skin (fur, scales, feathers, etc.)</li>
+        <li>Buff body types</li>
+        <li>Masculine men</li>
+        <li>Elderly</li>
+        <li>Mecha</li>
+        <li>Explicit NSFW</li>
+        <li>Heavy gore</li>
+        <li>Furry or anthro</li>
+        <li>Realistic / realism</li>
+      </ul>
+    </article>
+
+    <article data-doc="refund" data-title="💸 Refund Policy">
+      <ul>
+        <li>A <strong>100% refund</strong> is provided only if the work has not yet been started, if I am unable to complete the work, or if I need to cancel the order.</li>
+        <li>If the client cancels <strong>during the sketch process</strong>, <strong>50%</strong> of the payment is refunded.</li>
+        <li><strong>After the sketch is approved and delivered, refunds are no longer available.</strong></li>
+      </ul>
+    </article>
+
+    <article data-doc="time" data-title="⏳ Turnaround Time">
+      <ul>
+        <li>Estimated turnaround is <strong>2–6 weeks</strong>, but may vary with workload and complexity. Please allow flexibility with delivery time.</li>
+        <li>I will communicate any major delays and provide updates throughout the process.</li>
+        <li><strong>Do not commission me if you require a strict deadline.</strong></li>
+      </ul>
+    </article>
+
+    <article data-doc="pay" data-title="💳 Payment">
+      <ul>
+        <li><strong>100% payment upfront</strong> before work begins.</li>
+        <li>Payment through <strong>PayPal</strong> only.</li>
+        <li>Prices are in <strong>AUD</strong>.</li>
+        <li>Once I've accepted your commission, I'll contact you via your chosen method, confirm the details, then send a PayPal invoice.</li>
+      </ul>
+      <p class="tos-sub">🧾 Prices</p>
+      <ul>
+        <li>Headshot (shoulders up) — <strong>$45 AUD</strong></li>
+        <li>Bust up (waist up) — <strong>$65 AUD</strong></li>
+        <li>Half body (thigh up) — <strong>$85 AUD</strong></li>
+      </ul>
+      <p class="tos-note">Applications are reviewed within 2–7 days. No response means I'm either uncomfortable with the request or unable to complete it. Filling the form does not guarantee acceptance.</p>
+    </article>
+
+    <article data-doc="all" data-title="📜 Read everything in full">
+      <p>Before ticking the final box, please open and read <strong>every</strong> section completely.</p>
+      <p>Tap any of the <span class="tos-ink">pink words</span> in the agreement list — <strong>General TOS</strong>, <strong>Will / Won't Draw</strong>, <strong>refund</strong>, <strong>turnaround</strong>, and <strong>PayPal</strong> — to open its full text in a window like this one.</p>
+      <p>By ticking the final box you confirm you have read and understood all of the rules above in their entirety. 🌸</p>
+    </article>
+  </div>
+
   <script src="/app.js" defer></script>
-</body>
 </html>
