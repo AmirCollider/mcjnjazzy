@@ -67,27 +67,36 @@ async function handleMessage(message, env) {
 
   if (!text.startsWith("/")) return;
 
+  // /command@botname arg -> "/command"
+  const cmd = text.split(/\s+/)[0].replace(/@.*$/, "").toLowerCase();
+
+  // ==========================================
+  // /id — OPEN to everyone, so a future admin can read their
+  // numeric user id and hand it over to be put in ADMIN_IDS.
+  // (The admin list is only revealed to existing admins.)
+  // ==========================================
+  if (cmd === "/id" || cmd === "/whoami") {
+    const youAreAdmin = isAdmin(fromId, env);
+    const lines = [
+      "🪪 <b>This chat id:</b> <code>" + chatId + "</code>",
+      "👤 <b>Your user id:</b> <code>" + (fromId || "?") + "</code>",
+      "🛡 <b>Admin access:</b> " + (youAreAdmin ? "✅ yes" : "🔒 no")
+    ];
+    if (youAreAdmin) {
+      const admins = Array.from(adminSet(env)).join(", ") || "(none set)";
+      lines.push("👑 <b>Admins:</b> <code>" + admins + "</code>");
+    }
+    await tg(env, "sendMessage", { chat_id: chatId, text: lines.join("\n"), parse_mode: "HTML" });
+    return;
+  }
+
   if (!isAdmin(fromId, env)) {
     await tg(env, "sendMessage", { chat_id: chatId, text: "🔒 This bot is private." });
     return;
   }
 
-  // /command@botname arg -> "/command"
-  const cmd = text.split(/\s+/)[0].replace(/@.*$/, "").toLowerCase();
-
   if (cmd === "/start" || cmd === "/help") {
     await tg(env, "sendMessage", { chat_id: chatId, text: HELP, parse_mode: "HTML" });
-    return;
-  }
-
-  if (cmd === "/id" || cmd === "/whoami") {
-    const admins = Array.from(adminSet(env)).join(", ") || "(none set)";
-    const body = [
-      "🪪 <b>This chat id:</b> <code>" + chatId + "</code>",
-      "👤 <b>Your user id:</b> <code>" + (fromId || "?") + "</code>",
-      "🛡 <b>Admins:</b> <code>" + admins + "</code>"
-    ].join("\n");
-    await tg(env, "sendMessage", { chat_id: chatId, text: body, parse_mode: "HTML" });
     return;
   }
 
