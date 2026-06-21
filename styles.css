@@ -361,6 +361,22 @@ body {
 .req { color: var(--berry-ink); }
 .hint { font-family: var(--font-hand); font-size: 1.2rem; font-weight: 700; color: var(--ink-soft); }
 
+/* ==========================================
+   References Note — post-contact file reminder
+   ========================================== */
+.refs-note {
+  margin-top: 8px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, var(--panel), var(--panel-2));
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-s);
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+.refs-note strong { color: var(--berry-ink); }
+
 input, select, textarea {
   font-family: var(--font-body);
   font-size: 1rem;
