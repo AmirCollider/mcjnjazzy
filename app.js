@@ -19,6 +19,7 @@
   initLightbox();
   initSparkleClicks();
   initEstimate();
+  initTosModal();
 })();
 
 // ==========================================
@@ -269,6 +270,49 @@ function resetEstimate() {
 }
 
 // ==========================================
+// initTosModal() — open full policy text from pink keywords
+// ==========================================
+function initTosModal() {
+  const modal = document.getElementById("tosModal");
+  const titleEl = document.getElementById("tosModalTitle");
+  const bodyEl = document.getElementById("tosModalBody");
+  const closeBtn = document.getElementById("tosClose");
+  const docs = document.getElementById("tosDocs");
+  if (!modal || !titleEl || !bodyEl || !docs) return;
+
+  function open(name) {
+    const article = docs.querySelector('article[data-doc="' + name + '"]');
+    if (!article) return;
+    titleEl.textContent = article.getAttribute("data-title") || "Terms";
+    bodyEl.innerHTML = article.innerHTML;
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
+    if (closeBtn) closeBtn.focus();
+  }
+
+  function close() {
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden", "true");
+  }
+
+  // pink keywords live inside the agreement labels — stop the click
+  // from toggling the checkbox, then open the matching policy
+  document.querySelectorAll(".tos-link").forEach(function (btn) {
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      open(btn.getAttribute("data-doc"));
+    });
+  });
+
+  if (closeBtn) closeBtn.addEventListener("click", close);
+  modal.addEventListener("click", function (e) { if (e.target === modal) close(); });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && modal.classList.contains("open")) close();
+  });
+}
+
+// ==========================================
 // burstConfetti() — strawberry pop on success
 // ==========================================
 function burstConfetti(anchor, pieces) {
@@ -328,7 +372,8 @@ async function handleSubmit(event) {
       draw:   el.agreeDraw.checked,
       refund: el.agreeRefund.checked,
       time:   el.agreeTime.checked,
-      pay:    el.agreePay.checked
+      pay:    el.agreePay.checked,
+      all:    el.agreeAll.checked
     },
     website: el.website.value // honeypot
   };
@@ -346,8 +391,8 @@ async function handleSubmit(event) {
     setMessage(msg, "add your references and the extra info 🎨", "err");
     return;
   }
-  if (!payload.agree.tos || !payload.agree.draw || !payload.agree.refund || !payload.agree.time || !payload.agree.pay) {
-    setMessage(msg, "please tick all the agreements to continue 🌷", "err");
+  if (!payload.agree.tos || !payload.agree.draw || !payload.agree.refund || !payload.agree.time || !payload.agree.pay || !payload.agree.all) {
+    setMessage(msg, "please tick all the agreements (including the final one) to continue 🌷", "err");
     return;
   }
 
