@@ -449,6 +449,86 @@ textarea { resize: vertical; }
 }
 
 /* ==========================================
+   Commission Desk — extended controls
+   ========================================== */
+.price-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 4px 0 6px; }
+.price-card {
+  text-align: center; background: var(--panel); border: 2px solid var(--border);
+  border-radius: var(--radius-s); padding: 12px 8px;
+}
+.price-card b { display: block; font-family: var(--font-display); color: var(--ink); font-size: 0.98rem; }
+.price-card span { display: block; font-size: 0.74rem; color: var(--ink-soft); font-weight: 700; }
+.price-card em { display: block; margin-top: 4px; font-style: normal; font-weight: 800; color: var(--berry-ink); }
+
+.opt { color: var(--ink-soft); font-weight: 600; font-size: 0.85rem; }
+
+select {
+  appearance: none; -webkit-appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--berry-ink) 50%),
+    linear-gradient(135deg, var(--berry-ink) 50%, transparent 50%);
+  background-position: calc(100% - 20px) center, calc(100% - 14px) center;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 38px;
+  cursor: pointer;
+}
+
+.seg { display: flex; flex-wrap: wrap; gap: 10px; }
+.seg-opt { position: relative; flex: 1 1 30%; min-width: 120px; cursor: pointer; }
+.seg-opt input { position: absolute; opacity: 0; pointer-events: none; }
+.seg-opt span {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  text-align: center; height: 100%;
+  background: var(--panel); color: var(--ink); font-weight: 700; font-size: 0.9rem;
+  border: 2px solid transparent; border-radius: var(--radius-s);
+  padding: 12px 10px;
+  transition: transform .15s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.seg-opt span em { font-style: normal; color: var(--berry-ink); font-weight: 800; }
+.seg-opt:hover span { transform: translateY(-2px); background: var(--panel-2); }
+.seg-opt input:checked + span {
+  background: var(--btn-bg); color: var(--on-btn); border-color: var(--berry-ink);
+  box-shadow: var(--shadow-lift);
+}
+.seg-opt input:checked + span em { color: var(--on-btn); }
+.seg-opt input:focus-visible + span { box-shadow: 0 0 0 4px rgba(255,111,145,0.25); }
+
+.estimate {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  background: linear-gradient(135deg, var(--panel), var(--panel-2));
+  border: 2px solid var(--border); border-radius: var(--radius-s);
+  padding: 14px; text-align: center;
+}
+.estimate span { font-weight: 700; font-size: 0.78rem; color: var(--ink-soft); letter-spacing: .03em; text-transform: uppercase; }
+.estimate b { font-family: var(--font-display); font-size: 1.6rem; color: var(--berry-ink); }
+.estimate small { font-family: var(--font-hand); font-size: 1.05rem; color: var(--ink-soft); font-weight: 700; }
+
+.tos { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.agree label { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; font-weight: 600; }
+.agree input[type="checkbox"] {
+  appearance: none; -webkit-appearance: none;
+  flex: 0 0 auto; width: 22px; height: 22px; margin-top: 1px;
+  border: 2px solid var(--panel-2); border-radius: 7px; background: var(--bg-1);
+  display: grid; place-items: center; cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
+}
+.agree input[type="checkbox"]::after {
+  content: "✓"; color: var(--on-btn); font-weight: 900; font-size: 0.9rem;
+  opacity: 0; transform: scale(.6); transition: opacity .15s ease, transform .15s ease;
+}
+.agree input[type="checkbox"]:checked { background: var(--btn-bg); border-color: var(--berry-ink); }
+.agree input[type="checkbox"]:checked::after { opacity: 1; transform: scale(1); }
+.agree input[type="checkbox"]:focus-visible { box-shadow: 0 0 0 4px rgba(255,111,145,0.25); }
+.agree span { font-size: 0.9rem; color: var(--ink); }
+.agree strong { color: var(--berry-ink); }
+
+@media (max-width: 460px) {
+  .price-board { grid-template-columns: 1fr; }
+  .seg-opt { flex: 1 1 100%; }
+}
+
+/* ==========================================
    Footer
    ========================================== */
 .foot { text-align: center; color: var(--ink-soft); font-weight: 600; font-size: 0.9rem; margin-top: 8px; }
