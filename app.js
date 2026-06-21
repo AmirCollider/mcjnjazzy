@@ -223,49 +223,49 @@ function initLightbox() {
 }
 
 // ==========================================
-// initDeadlinePicker() — flexible deadline chips + optional date
+// initEstimate() — live AUD estimate as options change
 // ==========================================
-function initDeadlinePicker() {
-  const pick = document.getElementById("deadlinePick");
-  const dateInput = document.getElementById("deadlineDate");
-  const hidden = document.getElementById("deadline");
-  if (!pick || !hidden) return;
-
-  pick.addEventListener("click", function (e) {
-    const btn = e.target.closest(".pick");
-    if (!btn) return;
-
-    Array.prototype.forEach.call(pick.querySelectorAll(".pick"), function (b) {
-      b.classList.remove("is-active");
+function initEstimate() {
+  const form = document.getElementById("commissionForm");
+  if (!form) return;
+  ["type", "usage", "stream"].forEach(function (name) {
+    Array.prototype.forEach.call(form.querySelectorAll('input[name="' + name + '"]'), function (el) {
+      el.addEventListener("change", updateEstimate);
     });
-    btn.classList.add("is-active");
-
-    const val = btn.getAttribute("data-deadline");
-    if (val === "__date__") {
-      dateInput.classList.remove("is-hidden");
-      hidden.value = dateInput.value ? "📅 by " + dateInput.value : "";
-      dateInput.focus();
-    } else {
-      dateInput.classList.add("is-hidden");
-      hidden.value = val;
-    }
   });
-
-  dateInput.addEventListener("change", function () {
-    hidden.value = dateInput.value ? "📅 by " + dateInput.value : "";
-  });
+  updateEstimate();
 }
 
 // ==========================================
-// resetDeadline() — clear picker state after a send
+// computeEstimate() — base × usage + NDA fee (AUD)
 // ==========================================
-function resetDeadline() {
-  const pick = document.getElementById("deadlinePick");
-  const dateInput = document.getElementById("deadlineDate");
-  const hidden = document.getElementById("deadline");
-  if (pick) Array.prototype.forEach.call(pick.querySelectorAll(".pick"), function (b) { b.classList.remove("is-active"); });
-  if (dateInput) { dateInput.value = ""; dateInput.classList.add("is-hidden"); }
-  if (hidden) hidden.value = "";
+function computeEstimate(form) {
+  const type   = form.querySelector('input[name="type"]:checked');
+  const usage  = form.querySelector('input[name="usage"]:checked');
+  const stream = form.querySelector('input[name="stream"]:checked');
+  if (!type) return null;
+  const base = parseFloat(type.dataset.price) || 0;
+  const mult = usage ? (parseFloat(usage.dataset.mult) || 0) : 0;
+  const fee  = stream ? (parseFloat(stream.dataset.fee) || 0) : 0;
+  return Math.round((base * (1 + mult) + fee) * 100) / 100;
+}
+
+// ==========================================
+// updateEstimate() — paint the estimate badge
+// ==========================================
+function updateEstimate() {
+  const form = document.getElementById("commissionForm");
+  const out  = document.getElementById("estimateValue");
+  if (!form || !out) return;
+  const total = computeEstimate(form);
+  out.textContent = (total === null) ? "— AUD" : "$" + total.toFixed(2) + " AUD";
+}
+
+// ==========================================
+// resetEstimate() — repaint estimate after a send
+// ==========================================
+function resetEstimate() {
+  updateEstimate();
 }
 
 // ==========================================
