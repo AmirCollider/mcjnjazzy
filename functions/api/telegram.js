@@ -341,19 +341,24 @@ async function listByStatus(env, chatId, status) {
   await tg(env, "sendMessage", { chat_id: chatId, text: label + " — " + matches.length });
 
   // newest first, capped to avoid flooding the chat
-  matches.sort((a, b) => (a.name < b.name ? 1 : -1));
+  matches.sort((a, b) => ((b.metadata && b.metadata.createdAt) || 0) - ((a.metadata && a.metadata.createdAt) || 0));
   const slice = matches.slice(0, 12);
 
   for (const k of slice) {
     const m = k.metadata || {};
     const record = {
       id: k.name.replace(/^c:/, ""),
-      customer: m.customer || "—",
-      paintingClass: m.paintingClass || "—",
-      deadline: m.deadline || "—",
+      method: m.method || "",
+      handle: m.handle || "—",
+      type: m.type || "—",
+      usage: m.usage || "—",
+      estimate: m.estimate || "",
       status: m.status === "done" ? "done" : "active",
-      brief: "",
-      refs: ""
+      extra: "",
+      refs: "",
+      country: "",
+      stream: "",
+      paypal: ""
     };
     await tg(env, "sendMessage", {
       chat_id: chatId,
