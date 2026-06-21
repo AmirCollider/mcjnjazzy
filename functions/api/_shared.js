@@ -30,6 +30,34 @@ export function json(body, status = 200) {
 }
 
 // ==========================================
+// genId() — short, human-readable commission id (e.g. JZ-7Q3KP4)
+// ==========================================
+export function genId() {
+  const t = Date.now().toString(36).toUpperCase().slice(-4);
+  const alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+  let r = "";
+  for (let i = 0; i < 3; i++) r += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+  return "JZ-" + t + r;
+}
+
+// ==========================================
+// priceEstimate() — base × usage + NDA fee (AUD)
+// ==========================================
+export function priceEstimate(type, usage, stream) {
+  const base =
+    /Headshot/i.test(type || "") ? 45 :
+    /Bust/i.test(type || "")     ? 65 :
+    /Half/i.test(type || "")     ? 85 : 0;
+  const mult =
+    /\+100%|Commercial/i.test(usage || "") ? 1 :
+    /\+50%|Monetized/i.test(usage || "")   ? 0.5 : 0;
+  const fee = /NDA/i.test(stream || "") ? 20 : 0;
+  if (!base) return "";
+  const total = Math.round((base * (1 + mult) + fee) * 100) / 100;
+  return "$" + total.toFixed(2) + " AUD";
+}
+
+// ==========================================
 // esc() — escape HTML for parse_mode "HTML"
 // ==========================================
 export function esc(value) {
@@ -79,16 +107,26 @@ export function statusBadge(s) {
 // cardText() — render a commission as a message
 // ==========================================
 export function cardText(record, full) {
+  const handle = record.handle || "—";
+  const via = record.method ? esc(record.method) + " · " + esc(handle) : esc(handle);
+
   const lines = [
     "🍓 <b>COMMISSION</b> · " + statusBadge(record.status),
-    "👤 <b>From:</b> " + esc(record.customer),
-    "🎨 <b>Type:</b> " + esc(record.paintingClass),
-    "📅 <b>Deadline:</b> " + esc(record.deadline)
+    "📨 <b>Via:</b> " + via,
+    "🎨 <b>Type:</b> " + esc(record.type || "—"),
+    "💸 <b>Usage:</b> " + esc(record.usage || "—")
   ];
+
+  if (record.estimate) lines.push("💰 <b>Est:</b> " + esc(record.estimate));
+
   if (full) {
-    lines.push("", "📝 " + esc(record.brief || "—"));
+    lines.push("🌍 <b>Billing:</b> " + esc(record.country || "—"));
+    lines.push("🖼 <b>Share:</b> " + esc(record.stream || "—"));
+    if (record.paypal) lines.push("💳 <b>PayPal:</b> " + esc(record.paypal));
+    lines.push("", "📝 " + esc(record.extra || "—"));
     lines.push("🔗 " + (record.refs ? esc(record.refs) : "—"));
   }
+
   lines.push("", "🆔 <code>" + esc(record.id) + "</code>");
   return lines.join("\n");
 }
@@ -107,13 +145,12 @@ export function cardKeyboard(record, includeView) {
   if (includeView) first.push({ text: "👁 View", callback_data: "view:" + record.id });
   rows.push(first);
 
-  const u = usernameOf(record.customer);
-  if (u) {
-    rows.push([
-      { text: "💬 DM @" + u, url: "https://t.me/" + u },
-      { text: "🚫 Block", callback_data: "blk:" + u }
-    ]);
-  }
+  const u = usernameOf(record.handle);
+  const isTg = /telegram/i.test(record.method || "");
+  const contact = [];
+  if (u && isTg) contact.push({ text: "💬 DM @" + u, url: "https://t.me/" + u });
+  if (u) contact.push({ text: "🚫 Block", callback_data: "blk:" + u });
+  if (contact.length) rows.push(contact);
 
   rows.push([{ text: "🗑 Delete", callback_data: "del:" + record.id }]);
 
@@ -129,9 +166,12 @@ export async function putCommission(env, record) {
   await env.COMMISSIONS.put("c:" + record.id, JSON.stringify(record), {
     metadata: {
       status: record.status,
-      customer: record.customer,
-      paintingClass: record.paintingClass,
-      deadline: record.deadline
+      method: record.method,
+      handle: record.handle,
+      type: record.type,
+      usage: record.usage,
+      estimate: record.estimate,
+      createdAt: record.createdAt
     }
   });
 }
