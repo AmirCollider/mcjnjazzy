@@ -8,8 +8,7 @@
 // Secrets:  TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
 // Binding:  COMMISSIONS (KV)  — optional but recommended
 
-import { tg, json, esc, cardText, cardKeyboard, putCommission, isBlocked } from "./_shared.js";
-
+import { tg, json, esc, cardText, cardKeyboard, putCommission, isBlocked, genId, priceEstimate } from "./_shared.js";
 // ==========================================
 // onRequestPost() — entry point for POST
 // ==========================================
@@ -25,15 +24,21 @@ export async function onRequestPost(context) {
     }
 
     // server-side validation (never trust the client)
-    const required = ["customer", "paintingClass", "brief", "deadline"];
+    const required = ["method", "handle", "country", "type", "usage", "stream", "refs", "extra"];
     for (const field of required) {
       if (!data[field] || String(data[field]).trim() === "") {
         return json({ ok: false, error: "Missing field: " + field }, 400);
       }
     }
 
+    // all agreements must be accepted
+    const a = data.agree || {};
+    if (!a.tos || !a.draw || !a.refund || !a.time || !a.pay) {
+      return json({ ok: false, error: "Agreements required" }, 400);
+    }
+
     // blocked customers can't submit — tell them clearly
-    if (await isBlocked(env, data.customer)) {
+    if (await isBlocked(env, data.handle)) {
       return json({ ok: false, blocked: true, error: "blocked" }, 403);
     }
 
@@ -42,14 +47,18 @@ export async function onRequestPost(context) {
     }
 
     // build + persist the commission record
-    const id = Date.now().toString();
     const record = {
-      id: id,
-      customer: String(data.customer).trim(),
-      paintingClass: String(data.paintingClass).trim(),
-      brief: String(data.brief).trim(),
-      refs: data.refs ? String(data.refs).trim() : "",
-      deadline: String(data.deadline).trim(),
+      id: genId(),
+      method: String(data.method).trim(),
+      handle: String(data.handle).trim(),
+      paypal: data.paypal ? String(data.paypal).trim() : "",
+      country: String(data.country).trim(),
+      type: String(data.type).trim(),
+      usage: String(data.usage).trim(),
+      stream: String(data.stream).trim(),
+      refs: String(data.refs).trim(),
+      extra: String(data.extra).trim(),
+      estimate: priceEstimate(data.type, data.usage, data.stream),
       status: "active",
       createdAt: Date.now()
     };
