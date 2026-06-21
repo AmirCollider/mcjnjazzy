@@ -70,16 +70,21 @@ export function esc(value) {
 // ==========================================
 // adminSet() — who may control the bot
 // (ADMIN_IDS + the notification chat, deduped)
+// Accepts ids separated by commas, spaces, semicolons, or newlines,
+// and ignores stray quotes / @ / other junk — keeps only real numeric ids.
 // ==========================================
 export function adminSet(env) {
   const ids = new Set();
-  if (env.ADMIN_IDS) {
-    String(env.ADMIN_IDS).split(",").forEach((x) => {
-      const v = x.trim();
-      if (v) ids.add(v);
-    });
-  }
-  if (env.TELEGRAM_CHAT_ID) ids.add(String(env.TELEGRAM_CHAT_ID).trim());
+  const add = (raw) => {
+    String(raw == null ? "" : raw)
+      .split(/[^0-9-]+/)
+      .forEach((part) => {
+        const v = part.trim();
+        if (v && /^-?\d+$/.test(v)) ids.add(v);
+      });
+  };
+  add(env.ADMIN_IDS);
+  add(env.TELEGRAM_CHAT_ID);
   return ids;
 }
 
