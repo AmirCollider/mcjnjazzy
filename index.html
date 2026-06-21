@@ -160,12 +160,20 @@
     <!-- stitched divider -->
     <div class="stitch reveal delay-3" aria-hidden="true"></div>
 
-    <!-- ==========================================
+   <!-- ==========================================
          SECTION 4 — COMMISSION DESK (order form)
          ========================================== -->
     <section class="card desk reveal delay-4" aria-label="Commission desk">
       <h2 class="section-title">commission desk <span>🍰</span></h2>
-      <p class="desk-note">fill the little form below and your request flies straight to me 🕊️</p>
+      <p class="desk-note">read everything, tick the agreements, and your request flies straight to me 🕊️</p>
+
+      <!-- price board -->
+      <div class="price-board" aria-label="Prices (AUD)">
+        <div class="price-card"><b>Headshot</b><span>shoulders up</span><em>$45</em></div>
+        <div class="price-card"><b>Bust up</b><span>waist up</span><em>$65</em></div>
+        <div class="price-card"><b>Half body</b><span>thigh up</span><em>$85</em></div>
+      </div>
+      <p class="hint">prices in AUD · 100% upfront via PayPal · turnaround ~2–6 weeks 🍓</p>
 
       <form id="commissionForm" class="form" novalidate>
 
@@ -176,41 +184,142 @@
           </label>
         </div>
 
+        <!-- contact -->
         <div class="field">
-          <label for="customer">your Telegram username <span class="req">*</span></label>
-          <input id="customer" name="customer" type="text" placeholder="@your_telegram" required maxlength="120" autocomplete="off" />
-          <p class="hint">so I can reply to you on Telegram 💬</p>
+          <label for="method">method of communication <span class="req">*</span></label>
+          <select id="method" name="method" required>
+            <option value="" disabled selected>pick where I can reach you…</option>
+            <option value="Instagram">📷 Instagram</option>
+            <option value="Discord">💬 Discord</option>
+            <option value="Twitter/X">🐦 Twitter / X</option>
+            <option value="Telegram">✈️ Telegram</option>
+            <option value="Email">✉️ Email</option>
+          </select>
         </div>
 
         <div class="field">
-          <label for="paintingClass">what do you want? <span class="req">*</span></label>
-          <input id="paintingClass" name="paintingClass" type="text" required maxlength="160"
-            placeholder="e.g. full-body character, chibi, couple portrait…" />
+          <label for="handle">your username / handle <span class="req">*</span></label>
+          <input id="handle" name="handle" type="text" required maxlength="160" autocomplete="off"
+            placeholder="@username (or email if you picked Email)" />
+          <p class="hint">so I can reach you about your request 💌</p>
         </div>
 
         <div class="field">
-          <label for="brief">tell me your idea <span class="req">*</span></label>
-          <textarea id="brief" name="brief" rows="5" required maxlength="2000"
-            placeholder="the idea, the pose, colors you love, the overall mood… anything that helps me picture it 🎨"></textarea>
+          <label for="paypal">PayPal email <span class="opt">(only if different)</span></label>
+          <input id="paypal" name="paypal" type="email" maxlength="160" autocomplete="off"
+            placeholder="leave empty if same as your contact email" />
         </div>
 
         <div class="field">
-          <label for="refs">reference links</label>
-          <textarea id="refs" name="refs" rows="2" maxlength="1000"
-            placeholder="paste image links here (one per line) — Pinterest, Drive, imgur, anything 🔗"></textarea>
-          <p class="hint">links only for now — file upload is coming soon 🫧</p>
+          <label for="country">billing address — country <span class="req">*</span></label>
+          <input id="country" name="country" type="text" required maxlength="80" autocomplete="country-name"
+            placeholder="e.g. Australia" />
         </div>
 
+        <!-- commission type -->
         <div class="field">
-          <label>deadline <span class="req">*</span></label>
-          <div class="chip-pick" id="deadlinePick" role="group" aria-label="Choose a deadline">
-            <button type="button" class="pick" data-deadline="🌿 no rush — whenever works">🌿 no rush</button>
-            <button type="button" class="pick" data-deadline="🗓️ within 2 weeks">🗓️ within 2 weeks</button>
-            <button type="button" class="pick" data-deadline="⏳ within a month">⏳ within a month</button>
-            <button type="button" class="pick" data-deadline="__date__">📅 pick a date</button>
+          <label>commission type <span class="req">*</span></label>
+          <div class="seg" id="typePick" role="radiogroup" aria-label="Commission type">
+            <label class="seg-opt">
+              <input type="radio" name="type" value="Headshot (shoulders up to head)" data-price="45" />
+              <span>🧁 Headshot <em>$45</em></span>
+            </label>
+            <label class="seg-opt">
+              <input type="radio" name="type" value="Bust up (waist up)" data-price="65" />
+              <span>🍰 Bust up <em>$65</em></span>
+            </label>
+            <label class="seg-opt">
+              <input type="radio" name="type" value="Half body (thigh up)" data-price="85" />
+              <span>🎂 Half body <em>$85</em></span>
+            </label>
           </div>
-          <input id="deadlineDate" name="deadlineDate" type="date" class="deadline-date is-hidden" />
-          <input id="deadline" name="deadline" type="hidden" />
+        </div>
+
+        <!-- usage -->
+        <div class="field">
+          <label>how will you use it? <span class="req">*</span></label>
+          <div class="seg" id="usagePick" role="radiogroup" aria-label="Usage">
+            <label class="seg-opt">
+              <input type="radio" name="usage" value="Personal Use (included)" data-mult="0" />
+              <span>🌸 Personal <em>included</em></span>
+            </label>
+            <label class="seg-opt">
+              <input type="radio" name="usage" value="Monetized (+50%)" data-mult="0.5" />
+              <span>▶️ Monetized <em>+50%</em></span>
+            </label>
+            <label class="seg-opt">
+              <input type="radio" name="usage" value="Commercial (+100%)" data-mult="1" />
+              <span>🏷️ Commercial <em>+100%</em></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- streaming permission -->
+        <div class="field">
+          <label>may I publicly share / stream the work (with credit)? <span class="req">*</span></label>
+          <div class="seg" id="streamPick" role="radiogroup" aria-label="Sharing permission">
+            <label class="seg-opt">
+              <input type="radio" name="stream" value="Yes — sharing & WIPs OK" data-fee="0" />
+              <span>✅ Yes</span>
+            </label>
+            <label class="seg-opt">
+              <input type="radio" name="stream" value="Final work only (no WIP)" data-fee="0" />
+              <span>🤫 Final only</span>
+            </label>
+            <label class="seg-opt">
+              <input type="radio" name="stream" value="NDA required (privacy fee)" data-fee="20" />
+              <span>🔒 NDA <em>+$20</em></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- references -->
+        <div class="field">
+          <label for="refs">references &amp; files <span class="req">*</span></label>
+          <textarea id="refs" name="refs" rows="3" required maxlength="1500"
+            placeholder="reference sheets, mood boards, links (one per line) — Pinterest, Drive, imgur… 🔗"></textarea>
+          <p class="hint">clear refs help me stay accurate — links only for now 🫧</p>
+        </div>
+
+        <!-- extra info -->
+        <div class="field">
+          <label for="extra">extra info <span class="req">*</span></label>
+          <textarea id="extra" name="extra" rows="4" required maxlength="2000"
+            placeholder="pose, traits, expression, colors, mood — anything that helps me picture it 🎨"></textarea>
+        </div>
+
+        <!-- live estimate -->
+        <div class="estimate" id="estimate" aria-live="polite">
+          <span>estimated total</span>
+          <b id="estimateValue">— AUD</b>
+          <small>before optional complexity / suggestive fees</small>
+        </div>
+
+        <!-- agreements -->
+        <div class="field">
+          <label>please read &amp; agree <span class="req">*</span></label>
+          <ul class="tos">
+            <li class="agree">
+              <label><input type="checkbox" name="agreeTos" />
+                <span>I’ve read the <strong>General TOS</strong> — no tracing, no AI use/training, signature/watermark may apply.</span></label>
+            </li>
+            <li class="agree">
+              <label><input type="checkbox" name="agreeDraw" />
+                <span>I’ve read the <strong>Will / Won’t Draw</strong> list (no explicit NSFW, heavy gore, furry/anthro, realism, mecha…).</span></label>
+            </li>
+            <li class="agree">
+              <label><input type="checkbox" name="agreeRefund" />
+                <span>I understand the <strong>refund</strong> policy (no refunds after sketch approval).</span></label>
+            </li>
+            <li class="agree">
+              <label><input type="checkbox" name="agreeTime" />
+                <span>I understand turnaround is <strong>~2–6 weeks</strong> with <strong>no strict deadline</strong>.</span></label>
+            </li>
+            <li class="agree">
+              <label><input type="checkbox" name="agreePay" />
+                <span>I agree to <strong>100% upfront via PayPal</strong> (AUD) before work begins.</span></label>
+            </li>
+          </ul>
         </div>
 
         <button type="submit" class="submit" id="submitBtn">
