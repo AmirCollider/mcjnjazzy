@@ -301,28 +301,53 @@ async function handleSubmit(event) {
   event.preventDefault();
 
   const form  = event.currentTarget;
+  const el    = form.elements;
   const btn   = document.getElementById("submitBtn");
   const msg   = document.getElementById("formMsg");
   const label = btn.querySelector(".btn-label");
 
   setMessage(msg, "", "");
 
+  const type   = form.querySelector('input[name="type"]:checked');
+  const usage  = form.querySelector('input[name="usage"]:checked');
+  const stream = form.querySelector('input[name="stream"]:checked');
+
   const payload = {
-    customer:      form.customer.value.trim(),
-    paintingClass: form.paintingClass.value.trim(),
-    brief:         form.brief.value.trim(),
-    refs:          form.refs.value.trim(),
-    deadline:      form.deadline.value,
-    website:       form.website.value // honeypot
+    method:   el.method.value.trim(),
+    handle:   el.handle.value.trim(),
+    paypal:   el.paypal.value.trim(),
+    country:  el.country.value.trim(),
+    type:     type   ? type.value   : "",
+    usage:    usage  ? usage.value  : "",
+    stream:   stream ? stream.value : "",
+    refs:     el.refs.value.trim(),
+    extra:    el.extra.value.trim(),
+    estimate: computeEstimate(form),
+    agree: {
+      tos:    el.agreeTos.checked,
+      draw:   el.agreeDraw.checked,
+      refund: el.agreeRefund.checked,
+      time:   el.agreeTime.checked,
+      pay:    el.agreePay.checked
+    },
+    website: el.website.value // honeypot
   };
 
   // client-side guard (server re-checks)
-  if (!payload.customer || !payload.paintingClass || !payload.brief) {
-    setMessage(msg, "please fill the starred fields 🍓", "err");
+  if (!payload.method || !payload.handle || !payload.country) {
+    setMessage(msg, "please fill your contact + country 🍓", "err");
     return;
   }
-  if (!payload.deadline) {
-    setMessage(msg, "pick a deadline option above 🗓️", "err");
+  if (!payload.type || !payload.usage || !payload.stream) {
+    setMessage(msg, "pick a type, a usage, and a sharing option ✨", "err");
+    return;
+  }
+  if (!payload.refs || !payload.extra) {
+    setMessage(msg, "add your references and the extra info 🎨", "err");
+    return;
+  }
+  if (!payload.agree.tos || !payload.agree.draw || !payload.agree.refund || !payload.agree.time || !payload.agree.pay) {
+    setMessage(msg, "please tick all the agreements to continue 🌷", "err");
     return;
   }
 
@@ -338,13 +363,13 @@ async function handleSubmit(event) {
     });
     const data = await res.json();
 
-   if (res.ok && data.ok) {
+    if (res.ok && data.ok) {
       form.reset();
-      resetDeadline();
-      setMessage(msg, "sent! your request landed safely 💌✨", "ok");
+      resetEstimate();
+      setMessage(msg, "sent! your request landed safely 💌✨ — reviewed within 2–7 days", "ok");
       burstConfetti(btn);
     } else if (res.status === 403 || (data && data.blocked)) {
-      setMessage(msg, "this Telegram username can't send requests 🚫", "err");
+      setMessage(msg, "this username can't send requests 🚫", "err");
     } else {
       setMessage(msg, "something went wrong — please try again in a bit 🫧", "err");
     }
