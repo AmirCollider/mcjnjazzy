@@ -31,9 +31,9 @@ export async function onRequestPost(context) {
       }
     }
 
-    // all agreements must be accepted
+    // all agreements must be accepted (incl. the final "read everything" gate)
     const a = data.agree || {};
-    if (!a.tos || !a.draw || !a.refund || !a.time || !a.pay) {
+    if (!a.tos || !a.draw || !a.refund || !a.time || !a.pay || !a.all) {
       return json({ ok: false, error: "Agreements required" }, 400);
     }
 
