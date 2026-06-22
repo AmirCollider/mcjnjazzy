@@ -524,15 +524,22 @@ async function handleSubmit(event) {
   label.textContent = "sending…";
 
   try {
+    const body = new FormData();
+    body.append("payload", JSON.stringify(payload));
+    pickedFiles.forEach(function (file, i) {
+      body.append("file" + i, file, file.name || ("ref" + (i + 1)));
+    });
+
     const res  = await fetch("/api/commission", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      body: body
     });
     const data = await res.json();
 
     if (res.ok && data.ok) {
       form.reset();
+      pickedFiles.length = 0;
+      renderThumbs();
       resetEstimate();
       setMessage(msg, "sent! your request landed safely 💌✨ — reviewed within 2–7 days", "ok");
       burstConfetti(btn);
