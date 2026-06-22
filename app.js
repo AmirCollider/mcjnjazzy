@@ -225,6 +225,128 @@ function initLightbox() {
 }
 
 // ==========================================
+// Image Uploader — state (references & files)
+// AmirCollider Games — Commission Hub
+// ==========================================
+const MAX_FILES = 5;
+const MAX_BYTES = 10 * 1024 * 1024; // 10 MB each
+const pickedFiles = [];
+
+// ==========================================
+// initUploader() — wire the add-images control
+// ==========================================
+function initUploader() {
+  const wrap = document.getElementById("uploader");
+  if (!wrap) return;
+  const input  = document.getElementById("fileInput");
+  const btn    = document.getElementById("uploadBtn");
+  const thumbs = document.getElementById("thumbs");
+  if (!input || !btn || !thumbs) return;
+
+  btn.addEventListener("click", function () { if (!btn.disabled) input.click(); });
+  input.addEventListener("change", function () {
+    addFiles(input.files);
+    input.value = ""; // allow re-picking the same file
+  });
+
+  ["dragenter", "dragover"].forEach(function (ev) {
+    btn.addEventListener(ev, function (e) { e.preventDefault(); btn.classList.add("is-drag"); });
+  });
+  ["dragleave", "drop"].forEach(function (ev) {
+    btn.addEventListener(ev, function (e) { e.preventDefault(); btn.classList.remove("is-drag"); });
+  });
+  btn.addEventListener("drop", function (e) {
+    if (e.dataTransfer && e.dataTransfer.files) addFiles(e.dataTransfer.files);
+  });
+
+  renderThumbs();
+}
+
+// ==========================================
+// addFiles() — validate + queue selected images
+// ==========================================
+function addFiles(fileList) {
+  const msg = document.getElementById("formMsg");
+  const incoming = Array.prototype.slice.call(fileList || []);
+  for (const f of incoming) {
+    if (pickedFiles.length >= MAX_FILES) { setMessage(msg, "up to 5 images only 🌸", "err"); break; }
+    if (!/^image\//i.test(f.type))       { setMessage(msg, "only image files, please 🖼️", "err"); continue; }
+    if (f.size > MAX_BYTES)               { setMessage(msg, "“" + f.name + "” is over 10 MB 🫧", "err"); continue; }
+    if (pickedFiles.some((p) => p.name === f.name && p.size === f.size)) continue;
+    pickedFiles.push(f);
+  }
+  renderThumbs();
+}
+
+// ==========================================
+// renderThumbs() — preview tiles with remove buttons
+// ==========================================
+function renderThumbs() {
+  const thumbs = document.getElementById("thumbs");
+  const btn = document.getElementById("uploadBtn");
+  if (!thumbs) return;
+
+  thumbs.querySelectorAll("img[data-url]").forEach(function (img) {
+    try { URL.revokeObjectURL(img.dataset.url); } catch (e) {}
+  });
+  thumbs.innerHTML = "";
+
+  pickedFiles.forEach(function (file, idx) {
+    const url = URL.createObjectURL(file);
+    const li = document.createElement("li");
+    li.className = "thumb";
+
+    const img = document.createElement("img");
+    img.src = url;
+    img.dataset.url = url;
+    img.alt = file.name;
+    img.addEventListener("click", function () {
+      const box = document.getElementById("lightbox");
+      if (!box) return;
+      box.querySelector("img").src = url;
+      box.classList.add("open");
+      box.setAttribute("aria-hidden", "false");
+    });
+
+    const del = document.createElement("button");
+    del.type = "button";
+    del.className = "thumb-del";
+    del.setAttribute("aria-label", "Remove " + file.name);
+    del.textContent = "✕";
+    del.addEventListener("click", function () { removeFile(idx); });
+
+    const tag = document.createElement("span");
+    tag.className = "thumb-name";
+    tag.textContent = file.name;
+
+    li.appendChild(img);
+    li.appendChild(del);
+    li.appendChild(tag);
+    thumbs.appendChild(li);
+  });
+
+  if (btn) {
+    const full = pickedFiles.length >= MAX_FILES;
+    btn.disabled = full;
+    const tx = btn.querySelector(".upload-tx");
+    if (tx) {
+      tx.innerHTML = full
+        ? "max reached <em>(5 / 5)</em>"
+        : "add images <em>(" + pickedFiles.length + " / " + MAX_FILES + ")</em>";
+    }
+  }
+}
+
+// ==========================================
+// removeFile() — drop one queued image
+// ==========================================
+function removeFile(index) {
+  if (index < 0 || index >= pickedFiles.length) return;
+  pickedFiles.splice(index, 1);
+  renderThumbs();
+}
+
+// ==========================================
 // initEstimate() — live AUD estimate as options change
 // ==========================================
 function initEstimate() {
