@@ -20,6 +20,17 @@ export async function tg(env, method, payload) {
 }
 
 // ==========================================
+// tgMedia() — call the Telegram Bot API with multipart (file uploads)
+// ==========================================
+export async function tgMedia(env, method, form) {
+  const res = await fetch(
+    "https://api.telegram.org/bot" + env.TELEGRAM_BOT_TOKEN + "/" + method,
+    { method: "POST", body: form }
+  );
+  return res.json();
+}
+
+// ==========================================
 // json() — JSON Response helper
 // ==========================================
 export function json(body, status = 200) {
@@ -123,7 +134,8 @@ export function cardText(record, full) {
   ];
 
   if (record.estimate) lines.push("💰 <b>Est:</b> " + esc(record.estimate));
-
+  const nFiles = parseInt(record.files, 10) || 0;
+  if (nFiles) lines.push("📎 <b>Images:</b> " + nFiles + " attached");
   if (full) {
     lines.push("🌍 <b>Billing:</b> " + esc(record.country || "—"));
     lines.push("🖼 <b>Share:</b> " + esc(record.stream || "—"));
@@ -176,6 +188,7 @@ export async function putCommission(env, record) {
       type: record.type,
       usage: record.usage,
       estimate: record.estimate,
+      files: record.files || 0,
       createdAt: record.createdAt
     }
   });
