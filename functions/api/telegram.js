@@ -362,6 +362,7 @@ async function listByStatus(env, chatId, status) {
       type: m.type || "—",
       usage: m.usage || "—",
       estimate: m.estimate || "",
+      files: m.files || 0,
       status: m.status === "done" ? "done" : "active",
       extra: "",
       refs: "",
