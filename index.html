@@ -275,10 +275,19 @@
 
         <!-- references -->
 <div class="field">
-  <label for="refs">references &amp; files <span class="req">*</span></label>
+  <label for="refs">references & files <span class="req">*</span></label>
   <textarea id="refs" name="refs" rows="3" required maxlength="1500"
     placeholder="reference sheets, mood boards, VGen character profiles, links (one per line) — Pinterest, Drive, imgur… 🔗"></textarea>
-  <p class="hint">clear refs help me stay accurate — links only for now 🫧</p>
+  <p class="hint">clear refs help me stay accurate — links and/or images 🫧</p>
+  <div class="uploader" id="uploader">
+    <input type="file" id="fileInput" accept="image/*" multiple hidden />
+    <button type="button" class="upload-btn" id="uploadBtn">
+      <span class="upload-ic">🖼️</span>
+      <span class="upload-tx">add images <em>(0 / 5)</em></span>
+    </button>
+    <p class="upload-hint">any image type · max 5 files · up to 10 MB each 🌸</p>
+    <ul class="thumbs" id="thumbs" aria-label="Selected images"></ul>
+  </div>
   <p class="refs-note">🌸 <strong>Note:</strong> when I contact you, feel free to send any additional images or files of your requested character!</p>
 </div>
 
