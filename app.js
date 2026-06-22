@@ -2,7 +2,13 @@
 // app.js — Form Handling, Theme Toggle & UI
 // mcjn_jazzy — Commission Hub
 // ==========================================
-
+// ==========================================
+// Image Uploader — state (references & files)
+// AmirCollider Games — Commission Hub
+// ==========================================
+const MAX_FILES = 5;
+const MAX_BYTES = 10 * 1024 * 1024; // 10 MB each
+const pickedFiles = [];
 // ==========================================
 // init() — page setup on load
 // ==========================================
@@ -223,14 +229,6 @@ function initLightbox() {
   box.addEventListener("click", close);
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
 }
-
-// ==========================================
-// Image Uploader — state (references & files)
-// AmirCollider Games — Commission Hub
-// ==========================================
-const MAX_FILES = 5;
-const MAX_BYTES = 10 * 1024 * 1024; // 10 MB each
-const pickedFiles = [];
 
 // ==========================================
 // initUploader() — wire the add-images control
