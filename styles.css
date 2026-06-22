@@ -377,6 +377,121 @@ body {
 }
 .refs-note strong { color: var(--berry-ink); }
 
+/* ==========================================
+Image Uploader — references & files
+========================================== */
+.uploader { 
+  margin-top: 12px; 
+}
+.upload-btn {
+  width: 100%;
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  gap: 10px;
+  background: var(--panel);
+  color: var(--ink);
+  border: 2px dashed var(--panel-2);
+  border-radius: var(--radius-s);
+  padding: 14px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: transform .15s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.upload-btn em { 
+  font-style: normal; 
+  color: var(--berry-ink); 
+  font-weight: 800; 
+}
+.upload-btn .upload-ic { 
+  font-size: 1.15rem; 
+}
+.upload-btn:hover:not(:disabled) { 
+  transform: translateY(-2px); 
+  background: var(--panel-2); 
+  border-color: var(--berry); 
+}
+.upload-btn.is-drag { 
+  background: var(--panel-2); 
+  border-color: var(--berry); 
+  box-shadow: 0 0 0 4px rgba(255,111,145,0.18); 
+}
+.upload-btn:disabled { 
+  opacity: 0.55; 
+  cursor: not-allowed; 
+}
+.upload-hint {
+  font-family: var(--font-hand); 
+  font-size: 1.1rem; 
+  font-weight: 700;
+  color: var(--ink-soft); 
+  margin-top: 8px; 
+  text-align: center;
+}
+.thumbs {
+  list-style: none;
+  display: grid; 
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 10px; 
+  margin-top: 12px;
+}
+.thumb {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-s);
+  overflow: hidden;
+  background: var(--panel);
+  border: 2px solid var(--border);
+  box-shadow: var(--shadow-lift);
+  animation: lbIn .25s ease;
+}
+.thumb img { 
+  width: 100%; 
+  height: 100%; 
+  object-fit: cover; 
+  cursor: zoom-in; 
+  display: block; 
+}
+.thumb-del {
+  position: absolute; 
+  top: 5px; 
+  right: 5px;
+  width: 24px; 
+  height: 24px; 
+  display: grid; 
+  place-items: center;
+  background: rgba(36,24,32,0.66); 
+  color: #fff;
+  border: none; 
+  border-radius: 50%;
+  font-size: 0.75rem; 
+  font-weight: 900; 
+  cursor: pointer;
+  backdrop-filter: blur(2px);
+  transition: background .15s ease, transform .15s ease;
+}
+.thumb-del:hover { 
+  background: var(--berry-ink); 
+  transform: scale(1.1); 
+}
+.thumb-name {
+  position: absolute; 
+  left: 0; 
+  right: 0; 
+  bottom: 0;
+  padding: 6px 7px;
+  font-size: 0.66rem; 
+  font-weight: 700; 
+  color: #fff;
+  background: linear-gradient(180deg, transparent, rgba(36,24,32,0.82));
+  white-space: nowrap; 
+  overflow: hidden; 
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
 input, select, textarea {
   font-family: var(--font-body);
   font-size: 1rem;
