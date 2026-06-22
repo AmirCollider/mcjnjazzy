@@ -17,6 +17,7 @@
   initParallax();
   initTilt();
   initLightbox();
+  initUploader();
   initSparkleClicks();
   initEstimate();
   initTosModal();
