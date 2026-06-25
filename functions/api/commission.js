@@ -43,11 +43,18 @@ export async function onRequestPost(context) {
     }
 
     // server-side validation (never trust the client)
-    const required = ["method", "handle", "country", "type", "usage", "stream", "refs", "extra"];
+    // ==========================================
+    // Validate required fields
+    // refs is optional when reference images are uploaded
+    // ==========================================
+    const required = ["method", "handle", "country", "type", "usage", "stream", "extra"];
     for (const field of required) {
       if (!data[field] || String(data[field]).trim() === "") {
         return json({ ok: false, error: "Missing field: " + field }, 400);
       }
+    }
+    if ((!data.refs || String(data.refs).trim() === "") && files.length === 0) {
+      return json({ ok: false, error: "Missing field: refs" }, 400);
     }
 
     // all agreements must be accepted (incl. the final "read everything" gate)
