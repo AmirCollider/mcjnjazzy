@@ -333,6 +333,14 @@ function renderThumbs() {
         : "add images <em>(" + pickedFiles.length + " / " + MAX_FILES + ")</em>";
     }
   }
+
+  // ==========================================
+  // Sync refs textarea required state
+  // ==========================================
+  const refsEl = document.getElementById("refs");
+  if (refsEl) {
+    refsEl.required = pickedFiles.length === 0;
+  }
 }
 
 // ==========================================
@@ -508,7 +516,7 @@ async function handleSubmit(event) {
     setMessage(msg, "pick a type, a usage, and a sharing option ✨", "err");
     return;
   }
-  if (!payload.refs || !payload.extra) {
+ if ((!payload.refs && pickedFiles.length === 0) || !payload.extra) {
     setMessage(msg, "add your references and the extra info 🎨", "err");
     return;
   }
