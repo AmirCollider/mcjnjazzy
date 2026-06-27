@@ -15,6 +15,11 @@ const MANUAL_KEY = "ig:manual";
 const TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 
 // ==========================================
+// NOCACHE — never let the browser/edge cache live counts
+// (forces a fresh KV read so /ig updates show immediately)
+// ==========================================
+const NOCACHE = { "Cache-Control": "no-store, max-age=0" };
+// ==========================================
 // onRequestGet() — return live (or cached) counts
 // ==========================================
 export async function onRequestGet(context) {
@@ -35,7 +40,7 @@ export async function onRequestGet(context) {
           if (m.followers != null) stats.followers = m.followers;
           if (m.following != null) stats.following = m.following;
           if (Object.keys(stats).length) {
-            return json({ ok: true, manual: true, stats });
+            return json({ ok: true, manual: true, stats }, 200, NOCACHE);
           }
         }
       }
@@ -49,14 +54,14 @@ export async function onRequestGet(context) {
       if (cached) {
         const obj = JSON.parse(cached);
         if (obj && obj.stats && (Date.now() - obj.at) < TTL_MS) {
-          return json({ ok: true, cached: true, stats: obj.stats });
+          return json({ ok: true, cached: true, stats: obj.stats }, 200, NOCACHE);
         }
       }
     } catch (_) {}
   }
 
   if (!env.IG_USER_ID || !env.IG_ACCESS_TOKEN) {
-    return json({ ok: false, error: "Instagram not configured" });
+    return json({ ok: false, error: "Instagram not configured" }, 200, NOCACHE);
   }
 
   try {
@@ -69,7 +74,7 @@ export async function onRequestGet(context) {
     const data = await res.json();
 
     if (!res.ok || data.error) {
-      return json({ ok: false, error: "Instagram API error" });
+      return json({ ok: false, error: "Instagram API error" }, 200, NOCACHE);
     }
 
     const stats = {
@@ -84,8 +89,8 @@ export async function onRequestGet(context) {
       } catch (_) {}
     }
 
-    return json({ ok: true, cached: false, stats });
+    return json({ ok: true, cached: false, stats }, 200, NOCACHE);
   } catch (_) {
-    return json({ ok: false, error: "Instagram fetch failed" });
+    return json({ ok: false, error: "Instagram fetch failed" }, 200, NOCACHE);
   }
 }
