@@ -20,11 +20,12 @@ const HELP = [
   "/done — finished projects",
   "/block @user — stop someone submitting",
   "/unblock @user — let them submit again",
-  "/blocked — list blocked people",
+ "/blocked — list blocked people",
+  "/ig — set IG counts manually (no Facebook)",
   "/id — show this chat &amp; admin ids",
   "/help — this menu",
   "",
-  "On each project: ✅ done / ↩️ reopen, 👁 view, 💬 DM, 🚫 block, 🗑 delete."
+  "On each project: ✅ done / ↩️ reopen, 👁 view, 📎 photos, 💬 DM, 🚫 block, 🗑 delete."
 ].join("\n");
 
 // ==========================================
@@ -129,6 +130,8 @@ async function handleMessage(message, env) {
 
   if (cmd === "/blocked") { await sendBlockedList(env, chatId); return; }
 
+  if (cmd === "/ig" || cmd === "/stats") { await handleIgSet(env, chatId, text); return; }
+
   await tg(env, "sendMessage", { chat_id: chatId, text: "Unknown command. Try /help" });
 }
 
@@ -158,7 +161,7 @@ async function handleCallback(cb, env) {
     return listByStatus(env, chatId, "all");
   }
 
-  // view full detail
+  // view full detail (+ resend any saved reference photos)
   if (action === "view") {
     const record = await getRecord(env, arg);
     await tg(env, "answerCallbackQuery", { callback_query_id: cb.id });
@@ -170,6 +173,19 @@ async function handleCallback(cb, env) {
       disable_web_page_preview: true,
       reply_markup: cardKeyboard(record, false)
     });
+    if (record.fileIds && record.fileIds.length) await resendRefs(env, chatId, record);
+    return;
+  }
+
+  // resend the client's reference photos on demand
+  if (action === "pics") {
+    const record = await getRecord(env, arg);
+    await tg(env, "answerCallbackQuery", { callback_query_id: cb.id });
+    if (!record || !record.fileIds || !record.fileIds.length) {
+      await tg(env, "sendMessage", { chat_id: chatId, text: "No saved reference photos for this project 🫧" });
+      return;
+    }
+    await resendRefs(env, chatId, record);
     return;
   }
 
@@ -405,4 +421,85 @@ async function getRecord(env, id) {
   const raw = await env.COMMISSIONS.get("c:" + id);
   if (!raw) return null;
   try { return JSON.parse(raw); } catch (_) { return null; }
+}
+
+// ==========================================
+// resendRefs() — resend a project's stored reference photos
+// ==========================================
+async function resendRefs(env, chatId, record) {
+  const ids = (record.fileIds || []).slice(0, 5);
+  if (!ids.length) return;
+  const caption = "🔗 References · " + record.id + " · @" + (record.handle || "—");
+  if (ids.length === 1) {
+    try { await tg(env, "sendDocument", { chat_id: chatId, document: ids[0], caption: caption }); } catch (_) {}
+    return;
+  }
+  const media = ids.map(function (fid, i) {
+    const item = { type: "document", media: fid };
+    if (i === 0) item.caption = caption;
+    return item;
+  });
+  try { await tg(env, "sendMediaGroup", { chat_id: chatId, media: media }); } catch (_) {}
+}
+
+// ==========================================
+// handleIgSet() — manually set IG counts (stored in KV, no Facebook)
+// /ig                  → show current manual counts
+// /ig 10600            → set followers only
+// /ig 53 10600 349     → set posts / followers / following
+// /ig clear            → remove override (use the Graph API again)
+// ==========================================
+async function handleIgSet(env, chatId, text) {
+  if (!env.COMMISSIONS) {
+    await tg(env, "sendMessage", { chat_id: chatId, text: "Storage not configured." });
+    return;
+  }
+
+  let cur = {};
+  try { cur = JSON.parse((await env.COMMISSIONS.get("ig:manual")) || "{}") || {}; } catch (_) { cur = {}; }
+
+  if (/\bclear\b/i.test(text)) {
+    try { await env.COMMISSIONS.delete("ig:manual"); } catch (_) {}
+    await tg(env, "sendMessage", { chat_id: chatId, text: "🧹 Manual stats cleared — the site will use the Instagram API again (if configured)." });
+    return;
+  }
+
+  const nums = (text.match(/\d[\d,]*/g) || [])
+    .map(function (s) { return parseInt(s.replace(/,/g, ""), 10); })
+    .filter(function (n) { return !isNaN(n); });
+
+  if (nums.length === 0) {
+    const lines = [
+      "📊 <b>Manual IG stats</b>",
+      "🖼 posts: <b>" + (cur.posts != null ? cur.posts : "—") + "</b>",
+      "👥 followers: <b>" + (cur.followers != null ? cur.followers : "—") + "</b>",
+      "➡️ following: <b>" + (cur.following != null ? cur.following : "—") + "</b>",
+      "",
+      "Set followers: <code>/ig 10600</code>",
+      "Set all three: <code>/ig 53 10600 349</code>",
+      "Clear override: <code>/ig clear</code>"
+    ];
+    await tg(env, "sendMessage", { chat_id: chatId, text: lines.join("\n"), parse_mode: "HTML" });
+    return;
+  }
+
+  const next = Object.assign({}, cur);
+  if (nums.length >= 3) { next.posts = nums[0]; next.followers = nums[1]; next.following = nums[2]; }
+  else { next.followers = nums[0]; }
+  next.at = Date.now();
+
+  try {
+    await env.COMMISSIONS.put("ig:manual", JSON.stringify(next));
+  } catch (_) {
+    await tg(env, "sendMessage", { chat_id: chatId, text: "Couldn't save — is storage configured?" });
+    return;
+  }
+
+  await tg(env, "sendMessage", {
+    chat_id: chatId,
+    parse_mode: "HTML",
+    text: "✅ <b>Saved.</b>\n🖼 posts: <b>" + (next.posts != null ? next.posts : "—") +
+          "</b>\n👥 followers: <b>" + (next.followers != null ? next.followers : "—") +
+          "</b>\n➡️ following: <b>" + (next.following != null ? next.following : "—") + "</b>"
+  });
 }
