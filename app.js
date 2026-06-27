@@ -114,7 +114,7 @@ function initIgStats() {
 
   const fmt = (n) => (n >= 1000 ? (Math.round(n / 100) / 10) + "K" : Math.round(n).toString());
 
-  fetch("/api/igstats")
+ fetch("/api/igstats?t=" + Date.now(), { cache: "no-store" })
     .then((r) => r.json())
     .then((data) => {
       if (!data || !data.ok || !data.stats) return;
