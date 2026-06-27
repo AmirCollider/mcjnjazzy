@@ -31,12 +31,12 @@ export async function tgMedia(env, method, form) {
 }
 
 // ==========================================
-// json() — JSON Response helper
+// json() — JSON Response helper (optional extra headers)
 // ==========================================
-export function json(body, status = 200) {
+export function json(body, status = 200, headers) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { "Content-Type": "application/json" }
+    headers: Object.assign({ "Content-Type": "application/json" }, headers || {})
   });
 }
 
