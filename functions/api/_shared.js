@@ -79,10 +79,11 @@ export function esc(value) {
 }
 
 // ==========================================
-// adminSet() — who may control the bot
-// (ADMIN_IDS + the notification chat, deduped)
+// adminSet() — who may control AND receive from the bot
+// Both owners (AmirCollider + McjnJazzy) are treated identically.
 // Accepts ids separated by commas, spaces, semicolons, or newlines,
 // and ignores stray quotes / @ / other junk — keeps only real numeric ids.
+// Legacy ADMIN_IDS / TELEGRAM_CHAT_ID are still honoured if present (migration safety).
 // ==========================================
 export function adminSet(env) {
   const ids = new Set();
@@ -94,9 +95,31 @@ export function adminSet(env) {
         if (v && /^-?\d+$/.test(v)) ids.add(v);
       });
   };
+  add(env.AmirCollider);
+  add(env.McjnJazzy);
   add(env.ADMIN_IDS);
   add(env.TELEGRAM_CHAT_ID);
   return ids;
+}
+
+// ==========================================
+// chatIds() — every chat that should receive notifications
+// (identical to the admin set — both owners get everything)
+// ==========================================
+export function chatIds(env) {
+  return Array.from(adminSet(env));
+}
+
+// ==========================================
+// broadcast() — send one method/payload to every owner chat
+// returns the array of Telegram responses (same order as chatIds)
+// ==========================================
+export async function broadcast(env, method, payload) {
+  const out = [];
+  for (const id of chatIds(env)) {
+    out.push(await tg(env, method, Object.assign({}, payload, { chat_id: id })));
+  }
+  return out;
 }
 
 export function isAdmin(id, env) {
@@ -160,6 +183,8 @@ export function cardKeyboard(record, includeView) {
 
   const first = [toggle];
   if (includeView) first.push({ text: "👁 View", callback_data: "view:" + record.id });
+  const nFiles = parseInt(record.files, 10) || 0;
+  if (nFiles > 0) first.push({ text: "📎 Photos (" + nFiles + ")", callback_data: "pics:" + record.id });
   rows.push(first);
 
   const u = usernameOf(record.handle);
