@@ -8,7 +8,7 @@
 // Secrets:  TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
 // Binding:  COMMISSIONS (KV)  — optional but recommended
 
-import { tg, tgMedia, json, esc, cardText, cardKeyboard, putCommission, isBlocked, genId, priceEstimate } from "./_shared.js";
+import { tg, tgMedia, json, esc, cardText, cardKeyboard, putCommission, isBlocked, genId, priceEstimate, broadcast, chatIds } from "./_shared.js";
 // ==========================================
 // onRequestPost() — entry point for POST
 // ==========================================
@@ -68,7 +68,7 @@ export async function onRequestPost(context) {
       return json({ ok: false, blocked: true, error: "blocked" }, 403);
     }
 
-    if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) {
+    if (!env.TELEGRAM_BOT_TOKEN || chatIds(env).length === 0) {
       return json({ ok: false, error: "Server not configured" }, 500);
     }
 
@@ -92,22 +92,26 @@ export async function onRequestPost(context) {
 
     await putCommission(env, record);
 
-    // notify Jazzy with action buttons
-    const tgData = await tg(env, "sendMessage", {
-      chat_id: env.TELEGRAM_CHAT_ID,
+   // notify every owner (AmirCollider + McjnJazzy) with action buttons
+    const sends = await broadcast(env, "sendMessage", {
       text: cardText(record, true),
       parse_mode: "HTML",
       disable_web_page_preview: true,
       reply_markup: cardKeyboard(record, false)
     });
 
-    if (!tgData.ok) {
+    if (!sends.some(function (r) { return r && r.ok; })) {
       return json({ ok: false, error: "Telegram rejected the message" }, 502);
     }
 
-    // forward reference images (if any) as an album / single document
+    // forward reference images to every owner, then remember their
+    // Telegram file_ids so the bot can resend them later (e.g. on /projects)
     if (files.length) {
-      await sendReferenceImages(env, record, files);
+      const fileIds = await sendReferenceImages(env, record, files);
+      if (fileIds && fileIds.length) {
+        record.fileIds = fileIds;
+        await putCommission(env, record);
+      }
     }
 
     return json({ ok: true });
@@ -117,26 +121,51 @@ export async function onRequestPost(context) {
 }
 
 // ==========================================
-// sendReferenceImages() — post queued images to Telegram
+// sendReferenceImages() — post queued images to EVERY owner
+// Uploads the real bytes once, captures the Telegram file_ids,
+// then re-sends to the other owners by file_id (no re-upload).
+// Returns the captured file_ids for persistence on the record.
 // AmirCollider Games — Commission Hub
 // ==========================================
 async function sendReferenceImages(env, record, files) {
   const batch = files.slice(0, 5);
-  if (!batch.length) return;
+  if (!batch.length) return [];
   const caption = "🔗 References · " + record.id + " · @" + (record.handle || "—");
-  
-  // single file → sendDocument; multiple → sendMediaGroup album
+  const targets = chatIds(env);
+  if (!targets.length) return [];
+
+  // 1) upload the real bytes to the first reachable owner, capture file_ids
+  let fileIds = [];
+  let uploadedTo = -1;
+  for (let i = 0; i < targets.length && !fileIds.length; i++) {
+    fileIds = await uploadRefs(env, targets[i], batch, caption);
+    if (fileIds.length) uploadedTo = i;
+  }
+
+  // 2) re-send to every other owner by file_id (cheap, no re-upload)
+  if (fileIds.length) {
+    for (let t = 0; t < targets.length; t++) {
+      if (t === uploadedTo) continue;
+      await sendByFileIds(env, targets[t], fileIds, caption);
+    }
+  }
+
+  return fileIds;
+}
+
+// ==========================================
+// uploadRefs() — upload reference bytes to one chat, return file_ids
+// ==========================================
+async function uploadRefs(env, chatId, batch, caption) {
   if (batch.length === 1) {
     const fd = new FormData();
-    fd.append("chat_id", env.TELEGRAM_CHAT_ID);
+    fd.append("chat_id", chatId);
     fd.append("caption", caption);
     fd.append("document", batch[0], batch[0].name || "ref1");
-    try { await tgMedia(env, "sendDocument", fd); } catch (_) {}
-    return;
+    try { return idsFromResult(await tgMedia(env, "sendDocument", fd)); } catch (_) { return []; }
   }
-  
   const fd = new FormData();
-  fd.append("chat_id", env.TELEGRAM_CHAT_ID);
+  fd.append("chat_id", chatId);
   const media = batch.map(function (file, i) {
     const item = { type: "document", media: "attach://file" + i };
     if (i === 0) item.caption = caption;
@@ -144,7 +173,40 @@ async function sendReferenceImages(env, record, files) {
     return item;
   });
   fd.append("media", JSON.stringify(media));
-  try { await tgMedia(env, "sendMediaGroup", fd); } catch (_) {}
+  try { return idsFromResult(await tgMedia(env, "sendMediaGroup", fd)); } catch (_) { return []; }
+}
+
+// ==========================================
+// idsFromResult() — pull document file_ids out of a Telegram reply
+// (handles both sendDocument and sendMediaGroup shapes)
+// ==========================================
+function idsFromResult(r) {
+  if (!r || !r.ok || !r.result) return [];
+  const arr = Array.isArray(r.result) ? r.result : [r.result];
+  const ids = [];
+  arr.forEach(function (m) {
+    const doc = m && (m.document || (m.photo && m.photo[m.photo.length - 1]));
+    if (doc && doc.file_id) ids.push(doc.file_id);
+  });
+  return ids;
+}
+
+// ==========================================
+// sendByFileIds() — resend already-uploaded refs to one chat by file_id
+// ==========================================
+async function sendByFileIds(env, chatId, fileIds, caption) {
+  const ids = (fileIds || []).slice(0, 5);
+  if (!ids.length) return;
+  if (ids.length === 1) {
+    try { await tg(env, "sendDocument", { chat_id: chatId, document: ids[0], caption: caption }); } catch (_) {}
+    return;
+  }
+  const media = ids.map(function (fid, i) {
+    const item = { type: "document", media: fid };
+    if (i === 0) item.caption = caption;
+    return item;
+  });
+  try { await tg(env, "sendMediaGroup", { chat_id: chatId, media: media }); } catch (_) {}
 }
 
 // ==========================================
