@@ -187,12 +187,14 @@ export function cardKeyboard(record, includeView) {
   if (nFiles > 0) first.push({ text: "📎 Photos (" + nFiles + ")", callback_data: "pics:" + record.id });
   rows.push(first);
 
-  const u = usernameOf(record.handle);
+ const u = usernameOf(record.handle);
   const isTg = /telegram/i.test(record.method || "");
   const contact = [];
   if (u && isTg) contact.push({ text: "💬 DM @" + u, url: "https://t.me/" + u });
   if (u) contact.push({ text: "🚫 Block", callback_data: "blk:" + u });
   if (contact.length) rows.push(contact);
+
+  // photos button lives on listed/short cards where View also appears
 
   rows.push([{ text: "🗑 Delete", callback_data: "del:" + record.id }]);
 
