@@ -11,6 +11,7 @@
 import { json } from "./_shared.js";
 
 const CACHE_KEY = "ig:stats";
+const MANUAL_KEY = "ig:manual";
 const TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 
 // ==========================================
@@ -18,6 +19,28 @@ const TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 // ==========================================
 export async function onRequestGet(context) {
   const { env } = context;
+
+  // ==========================================
+  // Manual override (set from the bot's /ig command) — no Facebook needed
+  // Only set fields are returned, so unset ones keep the static numbers.
+  // ==========================================
+  if (env.COMMISSIONS) {
+    try {
+      const manual = await env.COMMISSIONS.get(MANUAL_KEY);
+      if (manual) {
+        const m = JSON.parse(manual);
+        if (m) {
+          const stats = {};
+          if (m.posts != null)     stats.posts = m.posts;
+          if (m.followers != null) stats.followers = m.followers;
+          if (m.following != null) stats.following = m.following;
+          if (Object.keys(stats).length) {
+            return json({ ok: true, manual: true, stats });
+          }
+        }
+      }
+    } catch (_) {}
+  }
 
   // serve a fresh-enough cached copy if we have one
   if (env.COMMISSIONS) {
