@@ -210,8 +210,29 @@
             placeholder="leave empty if same as your contact email" />
         </div>
 
+        <!-- ==========================================
+             Billing address — line / state / post code / country
+             ========================================== -->
         <div class="field">
-          <label for="country">billing address — country <span class="req">*</span></label>
+          <label for="address1">billing address — address line <span class="req">*</span></label>
+          <input id="address1" name="address1" type="text" required maxlength="160" autocomplete="address-line1"
+            placeholder="street address, apartment, unit…" />
+        </div>
+
+        <div class="field">
+          <label for="state">state / province <span class="req">*</span></label>
+          <input id="state" name="state" type="text" required maxlength="80" autocomplete="address-level1"
+            placeholder="e.g. Victoria" />
+        </div>
+
+        <div class="field">
+          <label for="postcode">post code <span class="req">*</span></label>
+          <input id="postcode" name="postcode" type="text" required maxlength="16" autocomplete="postal-code"
+            placeholder="e.g. 3000" />
+        </div>
+
+        <div class="field">
+          <label for="country">country <span class="req">*</span></label>
           <input id="country" name="country" type="text" required maxlength="80" autocomplete="country-name"
             placeholder="e.g. Australia" />
         </div>
