@@ -62,9 +62,9 @@ export function priceEstimate(type, usage, stream) {
   const mult =
     /\+100%|Commercial/i.test(usage || "") ? 1 :
     /\+50%|Monetized/i.test(usage || "")   ? 0.5 : 0;
-  const fee = /NDA/i.test(stream || "") ? 20 : 0;
+  const ndaPct = /NDA/i.test(stream || "") ? 0.2 : 0;
   if (!base) return "";
-  const total = Math.round((base * (1 + mult) + fee) * 100) / 100;
+  const total = Math.round((base * (1 + mult + ndaPct)) * 100) / 100;
   return "$" + total.toFixed(2) + " AUD";
 }
 
