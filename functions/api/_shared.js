@@ -159,8 +159,15 @@ export function cardText(record, full) {
   if (record.estimate) lines.push("💰 <b>Est:</b> " + esc(record.estimate));
   const nFiles = parseInt(record.files, 10) || 0;
   if (nFiles) lines.push("📎 <b>Images:</b> " + nFiles + " attached");
-  if (full) {
-    lines.push("🌍 <b>Billing:</b> " + esc(record.country || "—"));
+ if (full) {
+    // ==========================================
+    // Billing address — line, state, post code, country
+    // ==========================================
+    const addr = [record.address1, record.state, record.postcode, record.country]
+      .map(function (p) { return (p == null ? "" : String(p)).trim(); })
+      .filter(function (p) { return p; })
+      .join(", ");
+    lines.push("🌍 <b>Billing:</b> " + esc(addr || "—"));
     lines.push("🖼 <b>Share:</b> " + esc(record.stream || "—"));
     if (record.paypal) lines.push("💳 <b>PayPal:</b> " + esc(record.paypal));
     lines.push("", "📝 " + esc(record.extra || "—"));
