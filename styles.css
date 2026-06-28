@@ -53,17 +53,25 @@
 /* ----- reset ----- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-body {
-  font-family: var(--font-body);
-  color: var(--ink);
-  background:
-    radial-gradient(1200px 720px at 50% -8%, var(--bg-2) 0%, transparent 62%),
-    var(--bg-1);
-  min-height: 100dvh;
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-  transition: background-color .4s ease, color .4s ease;
+html {
+scrollbar-width: none;          /* Firefox /
+-ms-overflow-style: none;       / old Edge / IE /
 }
+html::-webkit-scrollbar { width: 0; height: 0; display: none; } / Chrome / Safari */
+body {
+font-family: var(--font-body);
+color: var(--ink);
+background:
+radial-gradient(1200px 720px at 50% -8%, var(--bg-2) 0%, transparent 62%),
+var(--bg-1);
+min-height: 100dvh;
+line-height: 1.5;
+-webkit-font-smoothing: antialiased;
+transition: background-color .4s ease, color .4s ease;
+scrollbar-width: none;          /* Firefox /
+-ms-overflow-style: none;       / old Edge / IE /
+}
+body::-webkit-scrollbar { width: 0; height: 0; display: none; } / Chrome / Safari */
 
 /* ==========================================
    Floating Background Doodles
