@@ -47,7 +47,7 @@ export async function onRequestPost(context) {
     // Validate required fields
     // refs is optional when reference images are uploaded
     // ==========================================
-    const required = ["method", "handle", "country", "type", "usage", "stream", "extra"];
+    const required = ["method", "handle", "address1", "state", "postcode", "country", "type", "usage", "stream", "extra"];
     for (const field of required) {
       if (!data[field] || String(data[field]).trim() === "") {
         return json({ ok: false, error: "Missing field: " + field }, 400);
@@ -73,11 +73,14 @@ export async function onRequestPost(context) {
     }
 
     // build + persist the commission record
-    const record = {
+   const record = {
       id: genId(),
       method: String(data.method).trim(),
       handle: String(data.handle).trim(),
       paypal: data.paypal ? String(data.paypal).trim() : "",
+      address1: String(data.address1).trim(),
+      state: String(data.state).trim(),
+      postcode: String(data.postcode).trim(),
       country: String(data.country).trim(),
       type: String(data.type).trim(),
       usage: String(data.usage).trim(),
