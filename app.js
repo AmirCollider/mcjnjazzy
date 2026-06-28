@@ -397,10 +397,10 @@ function computeEstimate(form) {
   const usage  = form.querySelector('input[name="usage"]:checked');
   const stream = form.querySelector('input[name="stream"]:checked');
   if (!type) return null;
-  const base = parseFloat(type.dataset.price) || 0;
-  const mult = usage ? (parseFloat(usage.dataset.mult) || 0) : 0;
-  const fee  = stream ? (parseFloat(stream.dataset.fee) || 0) : 0;
-  return Math.round((base * (1 + mult) + fee) * 100) / 100;
+  const base   = parseFloat(type.dataset.price) || 0;
+  const mult   = usage ? (parseFloat(usage.dataset.mult) || 0) : 0;
+  const ndaPct = stream ? (parseFloat(stream.dataset.fee) || 0) : 0;
+  return Math.round((base * (1 + mult + ndaPct)) * 100) / 100;
 }
 
 // ==========================================
