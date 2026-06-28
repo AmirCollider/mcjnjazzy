@@ -508,10 +508,13 @@ async function handleSubmit(event) {
   const usage  = form.querySelector('input[name="usage"]:checked');
   const stream = form.querySelector('input[name="stream"]:checked');
 
-  const payload = {
+ const payload = {
     method:   el.method.value.trim(),
     handle:   el.handle.value.trim(),
     paypal:   el.paypal.value.trim(),
+    address1: el.address1.value.trim(),
+    state:    el.state.value.trim(),
+    postcode: el.postcode.value.trim(),
     country:  el.country.value.trim(),
     type:     type   ? type.value   : "",
     usage:    usage  ? usage.value  : "",
@@ -531,8 +534,12 @@ async function handleSubmit(event) {
   };
 
   // client-side guard (server re-checks)
-  if (!payload.method || !payload.handle || !payload.country) {
-    setMessage(msg, "please fill your contact + country 🍓", "err");
+  if (!payload.method || !payload.handle) {
+    setMessage(msg, "please fill your contact details 🍓", "err");
+    return;
+  }
+  if (!payload.address1 || !payload.state || !payload.postcode || !payload.country) {
+    setMessage(msg, "please complete your billing address (line, state, post code, country) 🏷️", "err");
     return;
   }
   if (!payload.type || !payload.usage || !payload.stream) {
