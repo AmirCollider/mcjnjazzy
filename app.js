@@ -79,24 +79,36 @@ function initStats() {
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const fmt = (n) => (n >= 1000 ? (Math.round(n / 100) / 10) + "K" : Math.round(n).toString());
 
-  function run(el) {
-    const target = parseFloat(el.dataset.count) || 0;
-    if (reduce) { el.textContent = fmt(target); return; }
-    const dur = 1100;
-    const start = performance.now();
-    (function step(now) {
-      const p = Math.min(1, (now - start) / dur);
-      const eased = 1 - Math.pow(1 - p, 3);
-      el.textContent = fmt(target * eased);
-      if (p < 1) requestAnimationFrame(step);
-      else el.textContent = fmt(target);
-    })(start);
-  }
+  // ==========================================
+  // animateCount() — per-element, cancellable count-up
+  // stored on the node so live IG updates can retarget it
+  // ==========================================
+  nums.forEach(function (el) {
+    el._statRaf = 0;
+    el._statValue = 0;
+    el.animateCount = function () {
+      const target = parseFloat(el.dataset.count) || 0;
+      if (el._statRaf) { cancelAnimationFrame(el._statRaf); el._statRaf = 0; }
+      if (reduce) { el._statValue = target; el.textContent = fmt(target); return; }
+      const from = el._statValue;
+      const dur = 1100;
+      const start = performance.now();
+      (function step(now) {
+        const p = Math.min(1, (now - start) / dur);
+        const eased = 1 - Math.pow(1 - p, 3);
+        const val = from + (target - from) * eased;
+        el._statValue = val;
+        el.textContent = fmt(val);
+        if (p < 1) { el._statRaf = requestAnimationFrame(step); }
+        else { el._statValue = target; el.textContent = fmt(target); el._statRaf = 0; }
+      })(start);
+    };
+  });
 
-  if (!("IntersectionObserver" in window)) { nums.forEach(run); return; }
+  if (!("IntersectionObserver" in window)) { nums.forEach((el) => el.animateCount()); return; }
   const io = new IntersectionObserver(function (entries) {
     entries.forEach(function (entry) {
-      if (entry.isIntersecting) { run(entry.target); io.unobserve(entry.target); }
+      if (entry.isIntersecting) { entry.target.animateCount(); io.unobserve(entry.target); }
     });
   }, { threshold: 0.5 });
   nums.forEach((el) => io.observe(el));
@@ -112,16 +124,27 @@ function initIgStats() {
   const following = document.getElementById("statFollowing");
   if (!posts && !followers && !following) return;
 
-  const fmt = (n) => (n >= 1000 ? (Math.round(n / 100) / 10) + "K" : Math.round(n).toString());
+ const fmt = (n) => (n >= 1000 ? (Math.round(n / 100) / 10) + "K" : Math.round(n).toString());
 
- fetch("/api/igstats?t=" + Date.now(), { cache: "no-store" })
+  // ==========================================
+  // applyStat() — push a live count in and re-run the count-up
+  // (prevents the count-up animation from overwriting fresh data)
+  // ==========================================
+  const applyStat = (el, val) => {
+    if (!el || typeof val !== "number") return;
+    el.dataset.count = val;
+    if (typeof el.animateCount === "function") el.animateCount();
+    else el.textContent = fmt(val);
+  };
+
+  fetch("/api/igstats?t=" + Date.now(), { cache: "no-store" })
     .then((r) => r.json())
     .then((data) => {
       if (!data || !data.ok || !data.stats) return;
       const s = data.stats;
-      if (posts && typeof s.posts === "number") { posts.dataset.count = s.posts; posts.textContent = fmt(s.posts); }
-      if (followers && typeof s.followers === "number") { followers.dataset.count = s.followers; followers.textContent = fmt(s.followers); }
-      if (following && typeof s.following === "number") { following.dataset.count = s.following; following.textContent = fmt(s.following); }
+      applyStat(posts, s.posts);
+      applyStat(followers, s.followers);
+      applyStat(following, s.following);
     })
     .catch(function () { /* keep the static numbers */ });
 }
