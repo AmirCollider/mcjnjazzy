@@ -8,7 +8,7 @@
 // Secrets:  TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
 // Binding:  COMMISSIONS (KV)  — optional but recommended
 
-import { tg, tgMedia, json, esc, cardText, cardKeyboard, putCommission, isBlocked, genId, priceEstimate, broadcast, chatIds } from "./_shared.js";
+import { tg, tgMedia, json, esc, cardText, cardKeyboard, putCommission, isBlocked, genId, priceEstimate, broadcast, chatIds, r2PutRef } from "./_shared.js";
 // ==========================================
 // onRequestPost() — entry point for POST
 // ==========================================
@@ -108,11 +108,13 @@ export async function onRequestPost(context) {
     }
 
     // forward reference images to every owner, then remember their
-    // Telegram file_ids so the bot can resend them later (e.g. on /projects)
+    // Telegram file_ids (fast-path cache) + R2 object keys (permanent),
+    // so the bot can always resend them even if Telegram drops the file_ids
     if (files.length) {
-      const fileIds = await sendReferenceImages(env, record, files);
-      if (fileIds && fileIds.length) {
-        record.fileIds = fileIds;
+      const stored = await sendReferenceImages(env, record, files);
+      if (stored && (stored.fileIds.length || stored.r2Keys.length)) {
+        record.fileIds = stored.fileIds;
+        record.r2Keys  = stored.r2Keys;
         await putCommission(env, record);
       }
     }
@@ -124,20 +126,25 @@ export async function onRequestPost(context) {
 }
 
 // ==========================================
-// sendReferenceImages() — post queued images to EVERY owner
-// Uploads the real bytes once, captures the Telegram file_ids,
-// then re-sends to the other owners by file_id (no re-upload).
-// Returns the captured file_ids for persistence on the record.
+// sendReferenceImages() — persist images to R2, notify EVERY owner
+// 1) write the real bytes to R2 first (permanent source of truth)
+// 2) upload once to the first owner, capture Telegram file_ids (cache)
+// 3) re-send to the other owners by file_id (no re-upload)
+// Returns { fileIds, r2Keys } for persistence on the record.
 // AmirCollider Games — Commission Hub
 // ==========================================
 async function sendReferenceImages(env, record, files) {
   const batch = files.slice(0, 5);
-  if (!batch.length) return [];
+  if (!batch.length) return { fileIds: [], r2Keys: [] };
   const caption = "🔗 References · " + record.id + " · @" + (record.handle || "—");
-  const targets = chatIds(env);
-  if (!targets.length) return [];
 
-  // 1) upload the real bytes to the first reachable owner, capture file_ids
+  // 1) permanent storage — survives Telegram file_id invalidation
+  const r2Keys = await persistRefsToR2(env, record, batch);
+
+  const targets = chatIds(env);
+  if (!targets.length) return { fileIds: [], r2Keys: r2Keys };
+
+  // 2) upload the real bytes to the first reachable owner, capture file_ids
   let fileIds = [];
   let uploadedTo = -1;
   for (let i = 0; i < targets.length && !fileIds.length; i++) {
@@ -145,7 +152,7 @@ async function sendReferenceImages(env, record, files) {
     if (fileIds.length) uploadedTo = i;
   }
 
-  // 2) re-send to every other owner by file_id (cheap, no re-upload)
+  // 3) re-send to every other owner by file_id (cheap, no re-upload)
   if (fileIds.length) {
     for (let t = 0; t < targets.length; t++) {
       if (t === uploadedTo) continue;
@@ -153,7 +160,40 @@ async function sendReferenceImages(env, record, files) {
     }
   }
 
-  return fileIds;
+  return { fileIds: fileIds, r2Keys: r2Keys };
+}
+
+// ==========================================
+// persistRefsToR2() — store reference bytes permanently in R2
+// returns the object keys saved on the record (source of truth)
+// ==========================================
+async function persistRefsToR2(env, record, batch) {
+  if (!env.MCJNJCR2) return [];
+  const keys = [];
+  for (let i = 0; i < batch.length; i++) {
+    const file = batch[i];
+    const key = "refs/" + record.id + "/" + (i + 1) + extOf(file);
+    let bytes;
+    try { bytes = await file.arrayBuffer(); } catch (_) { continue; }
+    const ok = await r2PutRef(env, key, bytes, file.type || "application/octet-stream");
+    if (ok) keys.push(key);
+  }
+  return keys;
+}
+
+// ==========================================
+// extOf() — pick a file extension from name/type
+// ==========================================
+function extOf(file) {
+  const name = (file && file.name) ? String(file.name) : "";
+  const dot = name.lastIndexOf(".");
+  if (dot > -1 && dot < name.length - 1) return name.slice(dot).toLowerCase().replace(/[^.a-z0-9]/g, "");
+  const type = (file && file.type) ? String(file.type) : "";
+  if (/png/i.test(type))   return ".png";
+  if (/jpe?g/i.test(type)) return ".jpg";
+  if (/webp/i.test(type))  return ".webp";
+  if (/gif/i.test(type))   return ".gif";
+  return ".img";
 }
 
 // ==========================================
