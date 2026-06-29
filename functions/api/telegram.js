@@ -10,7 +10,7 @@
 //
 // Admins = ADMIN_IDS (comma-separated numeric ids) + TELEGRAM_CHAT_ID.
 
-import { tg, isAdmin, adminSet, esc, usernameOf, cardText, cardKeyboard, putCommission, setBlocked, listBlocked } from "./_shared.js";
+import { tg, tgMedia, isAdmin, adminSet, esc, usernameOf, cardText, cardKeyboard, putCommission, setBlocked, listBlocked, getCommission, listCommissions, countCommissions, deleteCommission, getSetting, putSetting, deleteSetting, r2GetRef } from "./_shared.js";
 
 const HELP = [
   "🍓 <b>Jazzy Commission Bot</b>",
@@ -173,7 +173,7 @@ async function handleCallback(cb, env) {
       disable_web_page_preview: true,
       reply_markup: cardKeyboard(record, false)
     });
-    if (record.fileIds && record.fileIds.length) await resendRefs(env, chatId, record);
+    if ((record.fileIds && record.fileIds.length) || (record.r2Keys && record.r2Keys.length)) await resendRefs(env, chatId, record);
     return;
   }
 
@@ -181,7 +181,8 @@ async function handleCallback(cb, env) {
   if (action === "pics") {
     const record = await getRecord(env, arg);
     await tg(env, "answerCallbackQuery", { callback_query_id: cb.id });
-    if (!record || !record.fileIds || !record.fileIds.length) {
+    const hasRefs = record && ((record.fileIds && record.fileIds.length) || (record.r2Keys && record.r2Keys.length));
+    if (!hasRefs) {
       await tg(env, "sendMessage", { chat_id: chatId, text: "No saved reference photos for this project 🫧" });
       return;
     }
@@ -258,11 +259,9 @@ async function handleCallback(cb, env) {
     return;
   }
 
-  // confirmed deletion
+ // confirmed deletion — removes the record and its R2 reference objects
   if (action === "delyes") {
-    if (env.COMMISSIONS) {
-      try { await env.COMMISSIONS.delete("c:" + arg); } catch (_) {}
-    }
+    await deleteCommission(env, arg);
     await tg(env, "editMessageText", {
       chat_id: chatId,
       message_id: messageId,
@@ -292,13 +291,12 @@ async function handleCallback(cb, env) {
 // sendSummary() — counts + filter buttons
 // ==========================================
 async function sendSummary(env, chatId) {
-  if (!env.COMMISSIONS) {
+  if (!env.MCJNJCD1) {
     await tg(env, "sendMessage", { chat_id: chatId, text: "Storage not configured." });
     return;
   }
-  const keys = await listKeys(env);
-  let active = 0, done = 0;
-  keys.forEach((k) => { (k.metadata && k.metadata.status === "done") ? done++ : active++; });
+  const counts = await countCommissions(env);
+  const active = counts.active, done = counts.done;
 
   await tg(env, "sendMessage", {
     chat_id: chatId,
@@ -319,7 +317,7 @@ async function sendSummary(env, chatId) {
 // sendBlockedList() — blocked usernames + unblock buttons
 // ==========================================
 async function sendBlockedList(env, chatId) {
-  if (!env.COMMISSIONS) {
+  if (!env.MCJNJCD1) {
     await tg(env, "sendMessage", { chat_id: chatId, text: "Storage not configured." });
     return;
   }
@@ -347,45 +345,24 @@ async function sendBlockedList(env, chatId) {
 // listByStatus() — send each matching project
 // ==========================================
 async function listByStatus(env, chatId, status) {
-  if (!env.COMMISSIONS) {
+  if (!env.MCJNJCD1) {
     await tg(env, "sendMessage", { chat_id: chatId, text: "Storage not configured." });
     return;
   }
-  const keys = await listKeys(env);
-  const matches = keys.filter((k) => {
-    const s = k.metadata && k.metadata.status === "done" ? "done" : "active";
-    return status === "all" ? true : s === status;
-  });
+  const records = await listCommissions(env, status === "all" ? "all" : status, 200);
 
-  if (matches.length === 0) {
+  if (records.length === 0) {
     await tg(env, "sendMessage", { chat_id: chatId, text: "Nothing here yet 🫧" });
     return;
   }
 
   const label = status === "done" ? "✅ Done" : status === "active" ? "🟡 In progress" : "🗂 All";
-  await tg(env, "sendMessage", { chat_id: chatId, text: label + " — " + matches.length });
+  await tg(env, "sendMessage", { chat_id: chatId, text: label + " — " + records.length });
 
-  // newest first, capped to avoid flooding the chat
-  matches.sort((a, b) => ((b.metadata && b.metadata.createdAt) || 0) - ((a.metadata && a.metadata.createdAt) || 0));
-  const slice = matches.slice(0, 12);
+  // already newest-first from the query, capped to avoid flooding the chat
+  const slice = records.slice(0, 12);
 
-  for (const k of slice) {
-    const m = k.metadata || {};
-    const record = {
-      id: k.name.replace(/^c:/, ""),
-      method: m.method || "",
-      handle: m.handle || "—",
-      type: m.type || "—",
-      usage: m.usage || "—",
-      estimate: m.estimate || "",
-      files: m.files || 0,
-      status: m.status === "done" ? "done" : "active",
-      extra: "",
-      refs: "",
-      country: "",
-      stream: "",
-      paypal: ""
-    };
+  for (const record of slice) {
     await tg(env, "sendMessage", {
       chat_id: chatId,
       text: cardText(record, false),
@@ -394,52 +371,127 @@ async function listByStatus(env, chatId, status) {
     });
   }
 
-  if (matches.length > slice.length) {
-    await tg(env, "sendMessage", { chat_id: chatId, text: "…and " + (matches.length - slice.length) + " more." });
+  if (records.length > slice.length) {
+    await tg(env, "sendMessage", { chat_id: chatId, text: "…and " + (records.length - slice.length) + " more." });
   }
 }
 
 // ==========================================
-// listKeys() — all commission keys from KV
-// ==========================================
-async function listKeys(env) {
-  const out = [];
-  let cursor;
-  do {
-    const page = await env.COMMISSIONS.list({ prefix: "c:", cursor });
-    out.push(...page.keys);
-    cursor = page.list_complete ? null : page.cursor;
-  } while (cursor);
-  return out;
-}
-
-// ==========================================
-// getRecord() — fetch one commission by id
+// getRecord() — fetch one commission by id (D1)
 // ==========================================
 async function getRecord(env, id) {
-  if (!env.COMMISSIONS || !id) return null;
-  const raw = await env.COMMISSIONS.get("c:" + id);
-  if (!raw) return null;
-  try { return JSON.parse(raw); } catch (_) { return null; }
+  return getCommission(env, id);
 }
 
 // ==========================================
-// resendRefs() — resend a project's stored reference photos
+// resendRefs() — resend a project's reference photos
+// fast path: cached Telegram file_ids; durable path: re-upload from R2
 // ==========================================
 async function resendRefs(env, chatId, record) {
-  const ids = (record.fileIds || []).slice(0, 5);
-  if (!ids.length) return;
   const caption = "🔗 References · " + record.id + " · @" + (record.handle || "—");
-  if (ids.length === 1) {
-    try { await tg(env, "sendDocument", { chat_id: chatId, document: ids[0], caption: caption }); } catch (_) {}
+  const ids = (record.fileIds || []).slice(0, 5);
+
+  // 1) fast path — resend by cached Telegram file_id
+  if (ids.length) {
+    const ok = await sendIdsToChat(env, chatId, ids, caption);
+    if (ok) return;
+  }
+
+  // 2) durable path — pull the original bytes from R2 and re-upload,
+  // then refresh the cached file_ids so the next resend is fast again
+  const keys = (record.r2Keys || []).slice(0, 5);
+  if (!keys.length || !env.MCJNJCR2) {
+    if (!ids.length) await tg(env, "sendMessage", { chat_id: chatId, text: "No saved reference photos for this project 🫧" });
     return;
+  }
+  const fresh = await uploadFromR2(env, chatId, keys, caption);
+  if (fresh.length) {
+    record.fileIds = fresh;
+    await putCommission(env, record);
+  }
+}
+
+// ==========================================
+// sendIdsToChat() — resend refs by Telegram file_id; true on success
+// ==========================================
+async function sendIdsToChat(env, chatId, ids, caption) {
+  if (!ids.length) return false;
+  if (ids.length === 1) {
+    let r;
+    try { r = await tg(env, "sendDocument", { chat_id: chatId, document: ids[0], caption: caption }); } catch (_) { return false; }
+    return !!(r && r.ok);
   }
   const media = ids.map(function (fid, i) {
     const item = { type: "document", media: fid };
     if (i === 0) item.caption = caption;
     return item;
   });
-  try { await tg(env, "sendMediaGroup", { chat_id: chatId, media: media }); } catch (_) {}
+  let r;
+  try { r = await tg(env, "sendMediaGroup", { chat_id: chatId, media: media }); } catch (_) { return false; }
+  return !!(r && r.ok);
+}
+
+// ==========================================
+// uploadFromR2() — fetch reference bytes from R2 and upload to a chat,
+// returning the freshly captured Telegram file_ids (for cache refresh)
+// ==========================================
+async function uploadFromR2(env, chatId, keys, caption) {
+  const items = [];
+  for (let i = 0; i < keys.length; i++) {
+    const obj = await r2GetRef(env, keys[i]);
+    if (!obj) continue;
+    let bytes;
+    try { bytes = await obj.arrayBuffer(); } catch (_) { continue; }
+    const ctype = (obj.httpMetadata && obj.httpMetadata.contentType) ? obj.httpMetadata.contentType : "application/octet-stream";
+    items.push({ blob: new Blob([bytes], { type: ctype }), name: nameFromKey(keys[i]) });
+  }
+  if (!items.length) return [];
+
+  if (items.length === 1) {
+    const fd = new FormData();
+    fd.append("chat_id", chatId);
+    fd.append("caption", caption);
+    fd.append("document", items[0].blob, items[0].name);
+    let r;
+    try { r = await tgMedia(env, "sendDocument", fd); } catch (_) { return []; }
+    return idsFromTgResult(r);
+  }
+
+  const fd = new FormData();
+  fd.append("chat_id", chatId);
+  const media = items.map(function (it, i) {
+    const m = { type: "document", media: "attach://file" + i };
+    if (i === 0) m.caption = caption;
+    fd.append("file" + i, it.blob, it.name);
+    return m;
+  });
+  fd.append("media", JSON.stringify(media));
+  let r;
+  try { r = await tgMedia(env, "sendMediaGroup", fd); } catch (_) { return []; }
+  return idsFromTgResult(r);
+}
+
+// ==========================================
+// idsFromTgResult() — pull document file_ids out of a Telegram reply
+// ==========================================
+function idsFromTgResult(r) {
+  if (!r || !r.ok || !r.result) return [];
+  const arr = Array.isArray(r.result) ? r.result : [r.result];
+  const ids = [];
+  arr.forEach(function (m) {
+    const doc = m && (m.document || (m.photo && m.photo[m.photo.length - 1]));
+    if (doc && doc.file_id) ids.push(doc.file_id);
+  });
+  return ids;
+}
+
+// ==========================================
+// nameFromKey() — filename for an R2 object key
+// ==========================================
+function nameFromKey(key) {
+  const s = String(key || "ref");
+  const slash = s.lastIndexOf("/");
+  return slash > -1 ? s.slice(slash + 1) : s;
 }
 
 // ==========================================
@@ -450,16 +502,16 @@ async function resendRefs(env, chatId, record) {
 // /ig clear            → remove override (use the Graph API again)
 // ==========================================
 async function handleIgSet(env, chatId, text) {
-  if (!env.COMMISSIONS) {
+  if (!env.MCJNJCD1) {
     await tg(env, "sendMessage", { chat_id: chatId, text: "Storage not configured." });
     return;
   }
 
   let cur = {};
-  try { cur = JSON.parse((await env.COMMISSIONS.get("ig:manual")) || "{}") || {}; } catch (_) { cur = {}; }
+  try { cur = JSON.parse((await getSetting(env, "ig:manual")) || "{}") || {}; } catch (_) { cur = {}; }
 
-  if (/\bclear\b/i.test(text)) {
-    try { await env.COMMISSIONS.delete("ig:manual"); } catch (_) {}
+if (/\bclear\b/i.test(text)) {
+    await deleteSetting(env, "ig:manual");
     await tg(env, "sendMessage", { chat_id: chatId, text: "🧹 Manual stats cleared — the site will use the Instagram API again (if configured)." });
     return;
   }
@@ -488,9 +540,8 @@ async function handleIgSet(env, chatId, text) {
   else { next.followers = nums[0]; }
   next.at = Date.now();
 
-  try {
-    await env.COMMISSIONS.put("ig:manual", JSON.stringify(next));
-  } catch (_) {
+  const saved = await putSetting(env, "ig:manual", JSON.stringify(next));
+  if (!saved) {
     await tg(env, "sendMessage", { chat_id: chatId, text: "Couldn't save — is storage configured?" });
     return;
   }
