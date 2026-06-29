@@ -8,7 +8,7 @@
 // Secrets:  IG_USER_ID, IG_ACCESS_TOKEN   (Instagram Graph API, long-lived token)
 // Binding (optional): COMMISSIONS (KV) — caches the result for 6h to spare rate limits
 
-import { json } from "./_shared.js";
+import { json, getSetting, putSetting } from "./_shared.js";
 
 const CACHE_KEY = "ig:stats";
 const MANUAL_KEY = "ig:manual";
@@ -29,9 +29,9 @@ export async function onRequestGet(context) {
   // Manual override (set from the bot's /ig command) — no Facebook needed
   // Only set fields are returned, so unset ones keep the static numbers.
   // ==========================================
-  if (env.COMMISSIONS) {
+ if (env.MCJNJCD1) {
     try {
-      const manual = await env.COMMISSIONS.get(MANUAL_KEY);
+      const manual = await getSetting(env, MANUAL_KEY);
       if (manual) {
         const m = JSON.parse(manual);
         if (m) {
@@ -48,9 +48,9 @@ export async function onRequestGet(context) {
   }
 
   // serve a fresh-enough cached copy if we have one
-  if (env.COMMISSIONS) {
+  if (env.MCJNJCD1) {
     try {
-      const cached = await env.COMMISSIONS.get(CACHE_KEY);
+      const cached = await getSetting(env, CACHE_KEY);
       if (cached) {
         const obj = JSON.parse(cached);
         if (obj && obj.stats && (Date.now() - obj.at) < TTL_MS) {
@@ -83,12 +83,12 @@ export async function onRequestGet(context) {
       following: data.follows_count || 0
     };
 
-    if (env.COMMISSIONS) {
+    if (env.MCJNJCD1) {
       try {
-        await env.COMMISSIONS.put(CACHE_KEY, JSON.stringify({ at: Date.now(), stats }));
+        await putSetting(env, CACHE_KEY, JSON.stringify({ at: Date.now(), stats }));
       } catch (_) {}
     }
-
+    
     return json({ ok: true, cached: false, stats }, 200, NOCACHE);
   } catch (_) {
     return json({ ok: false, error: "Instagram fetch failed" }, 200, NOCACHE);
