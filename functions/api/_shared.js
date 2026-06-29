@@ -209,23 +209,170 @@ export function cardKeyboard(record, includeView) {
 }
 
 // ==========================================
-// putCommission() — write/refresh a record in KV
-// (status kept in metadata for cheap listing)
+// rowToRecord() — map a D1 row to a commission record
+// ==========================================
+function rowToRecord(row) {
+  if (!row) return null;
+  let fileIds = [], r2Keys = [];
+  try { fileIds = JSON.parse(row.file_ids || "[]") || []; } catch (_) { fileIds = []; }
+  try { r2Keys  = JSON.parse(row.r2_keys  || "[]") || []; } catch (_) { r2Keys  = []; }
+  return {
+    id:        row.id,
+    method:    row.method   || "",
+    handle:    row.handle   || "",
+    paypal:    row.paypal   || "",
+    address1:  row.address1 || "",
+    state:     row.state    || "",
+    postcode:  row.postcode || "",
+    country:   row.country  || "",
+    type:      row.type     || "",
+    usage:     row.usage    || "",
+    stream:    row.stream   || "",
+    refs:      row.refs     || "",
+    extra:     row.extra    || "",
+    estimate:  row.estimate || "",
+    files:     row.files    || 0,
+    status:    row.status === "done" ? "done" : "active",
+    fileIds:   fileIds,
+    r2Keys:    r2Keys,
+    createdAt: row.created_at || 0
+  };
+}
+
+// ==========================================
+// putCommission() — upsert a record in D1
 // ==========================================
 export async function putCommission(env, record) {
-  if (!env.COMMISSIONS) return;
-  await env.COMMISSIONS.put("c:" + record.id, JSON.stringify(record), {
-    metadata: {
-      status: record.status,
-      method: record.method,
-      handle: record.handle,
-      type: record.type,
-      usage: record.usage,
-      estimate: record.estimate,
-      files: record.files || 0,
-      createdAt: record.createdAt
+  if (!env.MCJNJCD1) return;
+  const fileIds = JSON.stringify(record.fileIds || []);
+  const r2Keys  = JSON.stringify(record.r2Keys  || []);
+  try {
+    await env.MCJNJCD1.prepare(
+      'INSERT INTO commissions ' +
+      '(id, method, handle, paypal, address1, state, postcode, country, ' +
+      'type, "usage", stream, refs, extra, estimate, files, status, ' +
+      'file_ids, r2_keys, created_at) ' +
+      'VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19) ' +
+      'ON CONFLICT(id) DO UPDATE SET ' +
+      'method=?2, handle=?3, paypal=?4, address1=?5, state=?6, postcode=?7, country=?8, ' +
+      'type=?9, "usage"=?10, stream=?11, refs=?12, extra=?13, estimate=?14, ' +
+      'files=?15, status=?16, file_ids=?17, r2_keys=?18'
+    ).bind(
+      record.id, record.method || "", record.handle || "", record.paypal || "",
+      record.address1 || "", record.state || "", record.postcode || "", record.country || "",
+      record.type || "", record.usage || "", record.stream || "", record.refs || "",
+      record.extra || "", record.estimate || "", record.files || 0,
+      record.status || "active", fileIds, r2Keys, record.createdAt || Date.now()
+    ).run();
+  } catch (_) {}
+}
+
+// ==========================================
+// getCommission() — fetch one record from D1
+// ==========================================
+export async function getCommission(env, id) {
+  if (!env.MCJNJCD1 || !id) return null;
+  try {
+    const row = await env.MCJNJCD1.prepare("SELECT * FROM commissions WHERE id = ?1").bind(id).first();
+    return rowToRecord(row);
+  } catch (_) { return null; }
+}
+
+// ==========================================
+// listCommissions() — newest-first records, optionally by status
+// ==========================================
+export async function listCommissions(env, status, limit) {
+  if (!env.MCJNJCD1) return [];
+  const cap = limit || 200;
+  try {
+    let stmt;
+    if (status === "done") {
+      stmt = env.MCJNJCD1.prepare("SELECT * FROM commissions WHERE status = 'done' ORDER BY created_at DESC LIMIT ?1").bind(cap);
+    } else if (status === "active") {
+      stmt = env.MCJNJCD1.prepare("SELECT * FROM commissions WHERE status IS NOT 'done' ORDER BY created_at DESC LIMIT ?1").bind(cap);
+    } else {
+      stmt = env.MCJNJCD1.prepare("SELECT * FROM commissions ORDER BY created_at DESC LIMIT ?1").bind(cap);
     }
-  });
+    const res = await stmt.all();
+    return (res && res.results ? res.results : []).map(rowToRecord);
+  } catch (_) { return []; }
+}
+
+// ==========================================
+// countCommissions() — { active, done } tallies
+// ==========================================
+export async function countCommissions(env) {
+  const out = { active: 0, done: 0 };
+  if (!env.MCJNJCD1) return out;
+  try {
+    const res = await env.MCJNJCD1.prepare("SELECT status, COUNT(*) AS n FROM commissions GROUP BY status").all();
+    (res && res.results ? res.results : []).forEach(function (r) {
+      if (r.status === "done") out.done += r.n || 0; else out.active += r.n || 0;
+    });
+  } catch (_) {}
+  return out;
+}
+
+// ==========================================
+// deleteCommission() — remove a record + its R2 reference objects
+// ==========================================
+export async function deleteCommission(env, id) {
+  if (!env.MCJNJCD1 || !id) return false;
+  let keys = [];
+  try {
+    const row = await env.MCJNJCD1.prepare("SELECT r2_keys FROM commissions WHERE id = ?1").bind(id).first();
+    if (row) { try { keys = JSON.parse(row.r2_keys || "[]") || []; } catch (_) { keys = []; } }
+  } catch (_) {}
+  try { await env.MCJNJCD1.prepare("DELETE FROM commissions WHERE id = ?1").bind(id).run(); }
+  catch (_) { return false; }
+  if (env.MCJNJCR2 && keys.length) {
+    for (const k of keys) { try { await env.MCJNJCR2.delete(k); } catch (_) {} }
+  }
+  return true;
+}
+
+// ==========================================
+// getSetting() / putSetting() / deleteSetting() — key/value store (D1)
+// ==========================================
+export async function getSetting(env, key) {
+  if (!env.MCJNJCD1 || !key) return null;
+  try {
+    const row = await env.MCJNJCD1.prepare("SELECT value FROM settings WHERE key = ?1").bind(key).first();
+    return row ? row.value : null;
+  } catch (_) { return null; }
+}
+
+export async function putSetting(env, key, value) {
+  if (!env.MCJNJCD1 || !key) return false;
+  try {
+    await env.MCJNJCD1.prepare(
+      "INSERT INTO settings (key, value, updated_at) VALUES (?1, ?2, ?3) " +
+      "ON CONFLICT(key) DO UPDATE SET value=?2, updated_at=?3"
+    ).bind(key, String(value), Date.now()).run();
+    return true;
+  } catch (_) { return false; }
+}
+
+export async function deleteSetting(env, key) {
+  if (!env.MCJNJCD1 || !key) return false;
+  try { await env.MCJNJCD1.prepare("DELETE FROM settings WHERE key = ?1").bind(key).run(); return true; }
+  catch (_) { return false; }
+}
+
+// ==========================================
+// r2PutRef() / r2GetRef() — reference image bytes in R2 (permanent)
+// ==========================================
+export async function r2PutRef(env, key, body, contentType) {
+  if (!env.MCJNJCR2) return false;
+  try {
+    await env.MCJNJCR2.put(key, body, { httpMetadata: contentType ? { contentType: contentType } : undefined });
+    return true;
+  } catch (_) { return false; }
+}
+
+export async function r2GetRef(env, key) {
+  if (!env.MCJNJCR2 || !key) return null;
+  try { return await env.MCJNJCR2.get(key); } catch (_) { return null; }
 }
 
 // ==========================================
@@ -237,29 +384,35 @@ export function normUser(handle) {
 }
 
 // ==========================================
-// isBlocked() — is this customer on the blocklist?
+// isBlocked() — is this customer on the blocklist? (D1)
 // ==========================================
 export async function isBlocked(env, handle) {
-  if (!env.COMMISSIONS) return false;
+  if (!env.MCJNJCD1) return false;
   const u = normUser(handle);
   if (!u) return false;
   try {
-    return (await env.COMMISSIONS.get("blk:" + u)) !== null;
+    const row = await env.MCJNJCD1.prepare("SELECT username FROM blocklist WHERE username = ?1").bind(u).first();
+    return !!row;
   } catch (_) {
     return false;
   }
 }
 
 // ==========================================
-// setBlocked() — add/remove a username on the blocklist
+// setBlocked() — add/remove a username on the blocklist (D1)
 // ==========================================
 export async function setBlocked(env, handle, blocked) {
-  if (!env.COMMISSIONS) return false;
+  if (!env.MCJNJCD1) return false;
   const u = normUser(handle);
   if (!u) return false;
   try {
-    if (blocked) await env.COMMISSIONS.put("blk:" + u, "1", { metadata: { at: Date.now() } });
-    else await env.COMMISSIONS.delete("blk:" + u);
+    if (blocked) {
+      await env.MCJNJCD1.prepare(
+        "INSERT INTO blocklist (username, created_at) VALUES (?1, ?2) ON CONFLICT(username) DO NOTHING"
+      ).bind(u, Date.now()).run();
+    } else {
+      await env.MCJNJCD1.prepare("DELETE FROM blocklist WHERE username = ?1").bind(u).run();
+    }
     return true;
   } catch (_) {
     return false;
@@ -267,18 +420,12 @@ export async function setBlocked(env, handle, blocked) {
 }
 
 // ==========================================
-// listBlocked() — all blocked usernames
+// listBlocked() — all blocked usernames (D1)
 // ==========================================
 export async function listBlocked(env) {
-  if (!env.COMMISSIONS) return [];
-  const out = [];
-  let cursor;
+  if (!env.MCJNJCD1) return [];
   try {
-    do {
-      const page = await env.COMMISSIONS.list({ prefix: "blk:", cursor });
-      page.keys.forEach((k) => out.push(k.name.replace(/^blk:/, "")));
-      cursor = page.list_complete ? null : page.cursor;
-    } while (cursor);
-  } catch (_) {}
-  return out;
+    const res = await env.MCJNJCD1.prepare("SELECT username FROM blocklist ORDER BY created_at DESC").all();
+    return (res && res.results ? res.results : []).map(function (r) { return r.username; });
+  } catch (_) { return []; }
 }
